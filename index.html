@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohamed Ezz — AI Developer</title>
+<meta name="description" content="Mohamed Ezz — AI Developer. Machine Learning & Web Development portfolio.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:        #07070a;
+    --bg-soft:   #0d0e13;
+    --line:      #1c1e26;
+    --text:      #f3f4f7;
+    --text-dim:  #8b8f9c;
+    --text-faint:#565a66;
+    --cyan:      #2fe0ff;
+    --cyan-dim:  #123842;
+
+    --display:   'Unbounded', 'Noto Kufi Arabic', sans-serif;
+    --body:      'Inter', 'Noto Kufi Arabic', sans-serif;
+    --mono:      'JetBrains Mono', monospace;
+
+    --pad: clamp(24px, 6vw, 96px);
+    --maxw: 1360px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html[dir="rtl"] body{font-family:'Noto Kufi Arabic', var(--body);}
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    font-weight:300;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{background:var(--cyan);color:#000;}
+
+  .grain{
+    position:fixed;inset:0;pointer-events:none;z-index:500;
+    opacity:.035;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  img{display:block;max-width:100%;}
+  button{font-family:inherit;background:none;border:none;color:inherit;cursor:pointer;}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad);}
+
+  [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.16,.84,.44,1),transform .9s cubic-bezier(.16,.84,.44,1);}
+  [data-reveal].is-visible{opacity:1;transform:translateY(0);}
+  [data-reveal="stagger"] > *{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.16,.84,.44,1),transform .7s cubic-bezier(.16,.84,.44,1);}
+  [data-reveal="stagger"].is-visible > *{opacity:1;transform:translateY(0);}
+
+  @media (prefers-reduced-motion:reduce){
+    [data-reveal],[data-reveal] > *{transition:none !important;opacity:1 !important;transform:none !important;}
+    html{scroll-behavior:auto;}
+  }
+
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:400;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px var(--pad);
+    background:linear-gradient(to bottom, rgba(7,7,10,.85), transparent);
+    backdrop-filter:blur(6px);
+  }
+  .nav-mark{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.02em;}
+  .nav-mark span{color:var(--cyan);}
+  .nav-links{display:none;gap:32px;align-items:center;}
+  .nav-links a{font-size:13px;color:var(--text-dim);letter-spacing:.02em;transition:color .3s;}
+  .nav-links a:hover{color:var(--text);}
+  .lang-toggle{
+    border:1px solid var(--line);border-radius:100px;padding:6px 14px;
+    font-size:12px;color:var(--text-dim);transition:.3s;
+  }
+  .lang-toggle:hover{border-color:var(--cyan);color:var(--cyan);}
+  @media (min-width:860px){.nav-links{display:flex;}}
+
+  .hero{
+    min-height:100svh;position:relative;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    padding:0 var(--pad) 64px;
+    overflow:hidden;
+  }
+  .hero-photo{position:absolute;inset:0;z-index:0;}
+  .hero-photo img{
+    width:100%;height:100%;object-fit:cover;object-position:center 20%;
+    filter:saturate(.9) brightness(.62);
+  }
+  .hero-photo::after{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(to top, var(--bg) 4%, rgba(7,7,10,.35) 42%, rgba(7,7,10,.75) 100%),
+      linear-gradient(120deg, rgba(7,7,10,.55), rgba(7,7,10,.1) 55%);
+  }
+  .hero-content{position:relative;z-index:2;}
+  .hero-eyebrow{
+    font-family:var(--mono);font-size:12px;color:var(--cyan);
+    letter-spacing:.08em;margin-bottom:22px;display:flex;align-items:center;gap:10px;
+  }
+  .hero-eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan);}
+  h1.hero-name{
+    font-family:var(--display);font-weight:700;
+    font-size:clamp(52px, 10.5vw, 148px);
+    line-height:.94;letter-spacing:-.01em;
+    overflow:hidden;
+  }
+  h1.hero-name .line{display:block;overflow:hidden;}
+  h1.hero-name .line span{display:inline-block;transform:translateY(110%);transition:transform 1s cubic-bezier(.16,.84,.44,1);}
+  .hero.loaded h1.hero-name .line span{transform:translateY(0);}
+  h1.hero-name .line:nth-child(2) span{transition-delay:.08s;}
+
+  .hero-role{
+    font-size:clamp(15px,2vw,20px);color:var(--text-dim);margin-top:20px;
+    max-width:640px;font-weight:400;
+  }
+  .hero-role strong{color:var(--text);font-weight:500;}
+  .hero-bottom{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-top:56px;gap:24px;flex-wrap:wrap;
+  }
+  .hero-tag{max-width:420px;font-size:14px;color:var(--text-faint);line-height:1.6;}
+  .scroll-cue{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.1em;
+  }
+  .scroll-cue .bar{width:1px;height:34px;background:linear-gradient(var(--cyan),transparent);animation:scrollcue 1.8s ease-in-out infinite;}
+  @keyframes scrollcue{0%{transform:scaleY(0);transform-origin:top;}50%{transform:scaleY(1);transform-origin:top;}51%{transform-origin:bottom;}100%{transform:scaleY(0);transform-origin:bottom;}}
+
+  section{position:relative;padding:clamp(80px,12vw,160px) 0;}
+  .sec-head{display:flex;align-items:baseline;gap:20px;margin-bottom:clamp(40px,6vw,80px);}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--cyan);}
+  .sec-title{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.2vw,54px);letter-spacing:-.01em;}
+  .sec-line{flex:1;height:1px;background:var(--line);}
+  .divider{border-top:1px solid var(--line);}
+
+  .about-grid{display:grid;grid-template-columns:1fr;gap:48px;}
+  @media(min-width:900px){.about-grid{grid-template-columns:1.3fr .9fr;gap:80px;}}
+  .about-lede{font-size:clamp(20px,2.6vw,30px);line-height:1.45;color:var(--text);font-weight:300;}
+  .about-lede strong{font-weight:500;color:var(--cyan);}
+  .about-body{margin-top:28px;font-size:15px;line-height:1.9;color:var(--text-dim);max-width:56ch;}
+  .about-facts{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line);}
+  .fact{display:flex;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .fact .k{color:var(--text-faint);}
+  .fact .v{color:var(--text);text-align:right;}
+
+  .skills-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+  @media(min-width:700px){.skills-grid{grid-template-columns:repeat(4,1fr);}}
+  .skill-cell{background:var(--bg);padding:28px 22px;}
+  .skill-cell h4{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.06em;margin-bottom:16px;}
+  .skill-cell ul li{font-size:14px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--line);}
+  .skill-cell ul li:last-child{border-bottom:none;}
+
+  .project{
+    display:grid;grid-template-columns:1fr;gap:28px;
+    padding:56px 0;border-top:1px solid var(--line);
+    cursor:pointer;
+  }
+  .project:last-child{border-bottom:1px solid var(--line);}
+  @media(min-width:900px){.project{grid-template-columns:.5fr 1.5fr 1fr;gap:40px;align-items:start;}}
+  .project-index{font-family:var(--mono);font-size:14px;color:var(--text-faint);}
+  .project-main h3{
+    font-family:var(--display);font-weight:600;font-size:clamp(26px,3.6vw,44px);
+    letter-spacing:-.01em;transition:color .3s;
+  }
+  .project:hover .project-main h3{color:var(--cyan);}
+  .project-desc{margin-top:16px;font-size:14.5px;line-height:1.8;color:var(--text-dim);max-width:60ch;}
+  .project-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+  .tag{font-family:var(--mono);font-size:11px;color:var(--text-dim);border:1px solid var(--line);border-radius:100px;padding:5px 12px;}
+  .project-side{display:flex;flex-direction:column;gap:14px;}
+  .project-links{display:flex;gap:16px;margin-top:4px;}
+  .project-links a{font-size:13px;color:var(--cyan);border-bottom:1px solid var(--cyan-dim);padding-bottom:2px;transition:.3s;}
+  .project-links a:hover{border-color:var(--cyan);}
+  .project-meta-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-faint);border-bottom:1px solid var(--line);padding-bottom:10px;}
+  .project-open{font-family:var(--mono);font-size:12px;color:var(--text-faint);display:flex;align-items:center;gap:8px;}
+  .project:hover .project-open{color:var(--cyan);}
+  .project-open .plus{transition:transform .3s;}
+  .project.is-open .project-open .plus{transform:rotate(45deg);}
+
+  .case-study{grid-column:1 / -1;overflow:hidden;max-height:0;transition:max-height .6s cubic-bezier(.16,.84,.44,1);}
+  .project.is-open .case-study{max-height:1600px;}
+  .case-inner{padding-top:36px;display:grid;grid-template-columns:1fr;gap:28px;border-top:1px solid var(--line);margin-top:36px;}
+  @media(min-width:760px){.case-inner{grid-template-columns:repeat(2,1fr);gap:40px;}}
+  .case-block h5{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:.06em;margin-bottom:10px;}
+  .case-block p{font-size:14px;line-height:1.8;color:var(--text-dim);}
+
+  .timeline{border-top:1px solid var(--line);}
+  .t-item{display:grid;grid-template-columns:1fr;gap:8px;padding:32px 0;border-bottom:1px solid var(--line);}
+  @media(min-width:760px){.t-item{grid-template-columns:180px 1fr;gap:32px;}}
+  .t-date{font-family:var(--mono);font-size:12.5px;color:var(--text-faint);}
+  .t-role{font-family:var(--display);font-size:19px;font-weight:500;margin-bottom:6px;}
+  .t-org{font-size:13px;color:var(--cyan);margin-bottom:10px;}
+  .t-desc{font-size:14px;color:var(--text-dim);line-height:1.8;max-width:62ch;}
+
+  .certs{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line);border:1px solid var(--line);}
+  @media(min-width:760px){.certs{grid-template-columns:repeat(3,1fr);}}
+  .cert{background:var(--bg);padding:28px;}
+  .cert h4{font-size:16px;font-weight:500;margin-bottom:6px;}
+  .cert .org{font-size:12.5px;color:var(--cyan);}
+  .cert .meta{font-size:12px;color:var(--text-faint);margin-top:10px;font-family:var(--mono);}
+
+  .marquee-wrap{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:26px 0;}
+  .marquee-track{display:flex;gap:48px;white-space:nowrap;animation:marquee 26s linear infinite;width:max-content;}
+  .marquee-track span{font-family:var(--display);font-size:clamp(22px,3vw,34px);color:var(--text-faint);font-weight:500;}
+  .marquee-track span.hi{color:var(--cyan);}
+  @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  .contact-grid{display:grid;grid-template-columns:1fr;gap:56px;}
+  @media(min-width:900px){.contact-grid{grid-template-columns:1fr 1fr;}}
+  .contact-cta{font-family:var(--display);font-weight:600;font-size:clamp(34px,5.5vw,72px);line-height:1.05;letter-spacing:-.01em;}
+  .contact-links{display:flex;flex-direction:column;gap:0;margin-top:32px;}
+  .contact-links a{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--text-dim);transition:.3s;}
+  .contact-links a:hover{color:var(--cyan);}
+
+  .form-group{margin-bottom:20px;}
+  .form-group label{display:block;font-family:var(--mono);font-size:11px;color:var(--text-faint);letter-spacing:.06em;margin-bottom:8px;}
+  .form-group input, .form-group textarea{
+    width:100%;background:transparent;border:1px solid var(--line);border-radius:6px;
+    padding:14px 16px;color:var(--text);font-family:var(--body);font-size:14px;
+    transition:border-color .3s;
+  }
+  .form-group input:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan);}
+  .form-group textarea{resize:vertical;min-height:120px;}
+  .btn-magnetic{
+    position:relative;display:inline-flex;align-items:center;gap:10px;
+    padding:15px 30px;border:1px solid var(--cyan);border-radius:100px;
+    color:var(--cyan);font-size:13px;letter-spacing:.03em;overflow:hidden;
+    transition:color .3s;
+  }
+  .btn-magnetic::before{
+    content:"";position:absolute;inset:0;background:var(--cyan);
+    transform:translateY(101%);transition:transform .35s cubic-bezier(.16,.84,.44,1);z-index:-1;
+  }
+  .btn-magnetic:hover{color:#000;}
+  .btn-magnetic:hover::before{transform:translateY(0);}
+  .btn-ghost{opacity:.5;cursor:default;border-color:var(--line);color:var(--text-faint);}
+  .btn-ghost::before{display:none;}
+  .btn-ghost:hover{color:var(--text-faint);}
+  .form-note{font-size:12px;color:var(--text-faint);margin-top:14px;}
+
+  footer{padding:40px var(--pad);border-top:1px solid var(--line);}
+  .footer-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;font-size:12.5px;color:var(--text-faint);}
+  .footer-row a{color:var(--text-faint);transition:.3s;}
+  .footer-row a:hover{color:var(--cyan);}
+
+  [dir="rtl"] .fact .v{text-align:left;}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="nav">
+  <div class="nav-mark">M<span>.</span>EZZ</div>
+  <nav class="nav-links">
+    <a href="#about" data-i18n="nav.about">About</a>
+    <a href="#skills" data-i18n="nav.skills">Skills</a>
+    <a href="#projects" data-i18n="nav.projects">Projects</a>
+    <a href="#experience" data-i18n="nav.experience">Experience</a>
+    <a href="#contact" data-i18n="nav.contact">Contact</a>
+  </nav>
+  <button class="lang-toggle" id="langToggle">العربية</button>
+</header>
+
+<section class="hero" id="hero">
+  <div class="hero-photo"><img src="assets/mohamed.jpg" alt="Mohamed Ezz"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow" data-i18n="hero.eyebrow">AI Developer — Based in Minya, Egypt</div>
+    <h1 class="hero-name">
+      <span class="line"><span data-i18n="hero.name1">Mohamed</span></span>
+      <span class="line"><span data-i18n="hero.name2">Ezz</span></span>
+    </h1>
+    <p class="hero-role" data-i18n="hero.role"><strong>AI & Web Developer</strong> — turning ideas into products, with machine learning underneath when it's needed.</p>
+    <div class="hero-bottom">
+      <p class="hero-tag" data-i18n="hero.tag">Currently building applied ML and full-stack projects while studying Computer Science & Artificial Intelligence.</p>
+      <div class="scroll-cue"><span data-i18n="hero.scroll">SCROLL</span><div class="bar"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">01</span>
+      <h2 class="sec-title" data-i18n="about.title">About</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="about-grid">
+      <div data-reveal>
+        <p class="about-lede" data-i18n="about.lede">I'm a third-year <strong>Computer Science & AI</strong> student who learns by building — turning fitness data, banking data, and everyday problems into working software.</p>
+        <p class="about-body" data-i18n="about.body">I care about two things equally: writing software people actually use, and understanding the data and models underneath it. My main interests are Web Development and Artificial Intelligence — I like taking an idea from a blank page to a live product, and adding machine learning to it when the problem calls for it, not just because I can.</p>
+        <p class="about-body" data-i18n="about.body2">Right now I'm looking for internship and freelance opportunities where I can keep building real things and learn from people ahead of me.</p>
+      </div>
+      <div data-reveal>
+        <div class="about-facts">
+          <div class="fact"><span class="k" data-i18n="about.f1k">Based in</span><span class="v">Minya, Egypt</span></div>
+          <div class="fact"><span class="k" data-i18n="about.f2k">Studying</span><span class="v" data-i18n="about.f2v">Computer Science & AI</span></div>
+          <div class="fact"><span class="k" data-i18n="about.f3k">University</span><span class="v" data-i18n="about.f3v">Minya National University</span></div>
+          <div class="fact"><span class="k" data-i18n="about.f4k">Expected graduation</span><span class="v">2027 / 2028</span></div>
+          <div class="fact"><span class="k" data-i18n="about.f5k">Looking for</span><span class="v" data-i18n="about.f5v">Internship, Freelance</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="skills" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">02</span>
+      <h2 class="sec-title" data-i18n="skills.title">Skills</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="skills-grid" data-reveal="stagger">
+      <div class="skill-cell"><h4 data-i18n="skills.programming">Programming</h4><ul><li>Python</li><li>C++</li><li>JavaScript</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.dataanalysis">Data Analysis</h4><ul><li>Pandas</li><li>Data Cleaning</li><li>EDA</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.ml">Machine Learning</h4><ul><li>Scikit-learn</li><li>Logistic Regression</li><li>Model Selection</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.viz">Visualization</h4><ul><li>Matplotlib</li><li>Seaborn</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.db">Databases</h4><ul><li>Supabase</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.tools">Tools</h4><ul><li>Git / GitHub</li><li>Vercel</li><li>Next.js</li></ul></div>
+      <div class="skill-cell"><h4 data-i18n="skills.other">Other</h4><ul><li data-i18n="skills.fullstack">Full-stack Web Development</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="projects" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">03</span>
+      <h2 class="sec-title" data-i18n="projects.title">Selected Projects</h2>
+      <div class="sec-line"></div>
+    </div>
+
+    <div class="project" data-reveal data-project="gymez">
+      <div class="project-index">01 / GYMEZ</div>
+      <div class="project-main">
+        <h3>Gymez</h3>
+        <p class="project-desc" data-i18n="p.gymez.desc">A full-stack fitness web app that personalizes a user's workout and nutrition based on their own body data and goals, instead of giving everyone the same generic plan.</p>
+        <div class="project-tags">
+          <span class="tag">Next.js</span>
+          <span class="tag">Supabase</span>
+          <span class="tag">Exercise Image API</span>
+          <span class="tag">Barcode API</span>
+        </div>
+      </div>
+      <div class="project-side">
+        <div class="project-meta-row"><span data-i18n="p.role">Role</span><span data-i18n="p.gymez.role">Full-stack developer</span></div>
+        <div class="project-links">
+          <a href="https://github.com/mohamedezzmnu/GYMZ.git" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://gymez.vercel.app/" target="_blank" rel="noopener" data-i18n="p.live">Live Demo</a>
+        </div>
+        <div class="project-open"><span data-i18n="p.details">Case study</span><span class="plus">+</span></div>
+      </div>
+      <div class="case-study">
+        <div class="case-inner">
+          <div class="case-block"><h5 data-i18n="cs.problem">Problem</h5><p data-i18n="p.gymez.problem">People starting a fitness journey usually get one-size-fits-all plans that ignore their current condition, goals, and lifestyle.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.approach">Approach</h5><p data-i18n="p.gymez.approach">Built as a rule-based system (no ML model): user data drives personalized workout and nutrition logic, with weight tracking and progress charts.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.stack">Stack</h5><p data-i18n="p.gymez.stack">Next.js for the full-stack app, Supabase as the database, plus a third-party API for exercise images and a barcode API for food lookup.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.features">Key features</h5><p data-i18n="p.gymez.features">User onboarding, weight tracking, personalized workout plans, nutrition/diet system, and visual progress charts.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="project" data-reveal data-project="bank">
+      <div class="project-index">02 / ML</div>
+      <div class="project-main">
+        <h3 data-i18n="p.bank.title">Bank Term Deposit Prediction</h3>
+        <p class="project-desc" data-i18n="p.bank.desc">Enter a client's profile and call details to estimate the odds they subscribe to a term deposit.</p>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Pandas</span>
+          <span class="tag">Matplotlib</span>
+          <span class="tag">Seaborn</span>
+          <span class="tag">Logistic Regression</span>
+        </div>
+      </div>
+      <div class="project-side">
+        <div class="project-meta-row"><span data-i18n="p.role">Role</span><span data-i18n="p.bank.role">Solo — data prep, modeling, deployment</span></div>
+        <div class="project-links">
+          <a href="https://github.com/mohamedezzmnu/bank-term-deposit-prediction.git" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://bank-term-deposit-prediction-gamma.vercel.app/" target="_blank" rel="noopener" data-i18n="p.live">Live Demo</a>
+        </div>
+        <div class="project-open"><span data-i18n="p.details">Case study</span><span class="plus">+</span></div>
+      </div>
+      <div class="case-study">
+        <div class="case-inner">
+          <div class="case-block"><h5 data-i18n="cs.problem">Problem</h5><p data-i18n="p.bank.problem">Predict whether a bank client will subscribe to a term deposit based on their profile and the details of the marketing call.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.dataset">Dataset</h5><p data-i18n="p.bank.dataset">Bank marketing dataset sourced from Kaggle.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.model">Model</h5><p data-i18n="p.bank.model">Logistic Regression, with EDA and data cleaning done in Pandas beforehand.</p></div>
+          <div class="case-block"><h5 data-i18n="cs.results">Results</h5><p data-i18n="p.bank.results">Achieved a high prediction accuracy on the test data (exact metric not recorded).</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="experience" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">04</span>
+      <h2 class="sec-title" data-i18n="exp.title">Experience</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="timeline" data-reveal="stagger">
+      <div class="t-item">
+        <div class="t-date" data-i18n="exp.nti.date">1 month · 6h/day, Sun–Thu</div>
+        <div>
+          <div class="t-role" data-i18n="exp.nti.role">Machine Learning Training</div>
+          <div class="t-org">NTI — National Telecommunication Institute</div>
+          <p class="t-desc" data-i18n="exp.nti.desc">120-hour intensive training covering how to approach an ML problem, choose the right model, explore data (EDA), and clean it before modeling.</p>
+        </div>
+      </div>
+      <div class="t-item">
+        <div class="t-date" data-i18n="exp.selftaught.date">Self-taught</div>
+        <div>
+          <div class="t-role" data-i18n="exp.selftaught.role">Python & C++ Foundations</div>
+          <div class="t-org" data-i18n="exp.selftaught.org">Independent study — YouTube</div>
+          <p class="t-desc" data-i18n="exp.selftaught.desc">Built core programming fundamentals in Python and C++ before applying them to real projects.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="education" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">05</span>
+      <h2 class="sec-title" data-i18n="edu.title">Education</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="timeline" data-reveal="stagger">
+      <div class="t-item">
+        <div class="t-date">2023 — 2027/2028</div>
+        <div>
+          <div class="t-role" data-i18n="edu.degree">B.Sc. Computer Science & Artificial Intelligence</div>
+          <div class="t-org" data-i18n="edu.uni">Minya National University</div>
+          <p class="t-desc" data-i18n="edu.status">Currently in third year, expected to graduate in 2027/2028.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="certifications" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">06</span>
+      <h2 class="sec-title" data-i18n="cert.title">Certifications</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="certs" data-reveal="stagger">
+      <div class="cert"><h4 data-i18n="cert.c1.name">Machine Learning Training</h4><div class="org">NTI</div><div class="meta">120 hours</div></div>
+      <div class="cert"><h4 data-i18n="cert.c2.name">Python Course</h4><div class="org" data-i18n="cert.selftaught">Self-taught — YouTube</div></div>
+      <div class="cert"><h4 data-i18n="cert.c3.name">C++ Course</h4><div class="org" data-i18n="cert.selftaught">Self-taught — YouTube</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="exploring" class="divider" style="padding-block:64px;">
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span data-i18n="explore.m1">Currently exploring</span>
+      <span class="hi">Machine Learning</span><span>·</span>
+      <span class="hi">Web Development</span><span>·</span>
+      <span class="hi">Artificial Intelligence</span><span>·</span>
+      <span data-i18n="explore.m1">Currently exploring</span>
+      <span class="hi">Machine Learning</span><span>·</span>
+      <span class="hi">Web Development</span><span>·</span>
+      <span class="hi">Artificial Intelligence</span><span>·</span>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="divider">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="sec-num">07</span>
+      <h2 class="sec-title" data-i18n="contact.title">Contact</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="contact-grid">
+      <div data-reveal>
+        <p class="contact-cta" data-i18n="contact.cta">Let's build<br>something real.</p>
+        <div class="contact-links">
+          <a href="mailto:mohamedezzmnu@gmail.com">Email <span>mohamedezzmnu@gmail.com</span></a>
+          <a href="https://github.com/mohamedezzmnu" target="_blank" rel="noopener">GitHub <span>↗</span></a>
+          <a href="https://www.linkedin.com/in/mohamed-ezz-45825a390" target="_blank" rel="noopener">LinkedIn <span>↗</span></a>
+          <a href="https://www.kaggle.com/mohamedezzf" target="_blank" rel="noopener">Kaggle <span>↗</span></a>
+          <a href="https://x.com/ezz1611" target="_blank" rel="noopener">X / Twitter <span>↗</span></a>
+        </div>
+        <div style="margin-top:32px;">
+          <button class="btn-magnetic btn-ghost" disabled data-i18n="contact.cv">Download CV — Coming soon</button>
+        </div>
+      </div>
+      <div data-reveal>
+        <form id="contactForm" onsubmit="event.preventDefault(); document.getElementById('formStatus').style.display='block'; this.reset();">
+          <div class="form-group"><label data-i18n="form.name">Name</label><input type="text" required></div>
+          <div class="form-group"><label data-i18n="form.email">Email</label><input type="email" required></div>
+          <div class="form-group"><label data-i18n="form.message">Message</label><textarea required></textarea></div>
+          <button type="submit" class="btn-magnetic" data-i18n="form.send">Send Message</button>
+          <p class="form-note" id="formStatus" style="display:none;" data-i18n="form.note">This form is a front-end demo — connect it to an email service to receive messages.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-row">
+    <span>© 2026 Mohamed Ezz</span>
+    <span data-i18n="footer.built">Designed & built by Mohamed Ezz</span>
+    <a href="#hero" data-i18n="footer.top">Back to top ↑</a>
+  </div>
+</footer>
+
+<script>
+const translations = {
+  ar: {
+    "nav.about":"نبذة عني","nav.skills":"المهارات","nav.projects":"المشاريع","nav.experience":"الخبرة","nav.contact":"تواصل",
+    "hero.eyebrow":"مطوّر ذكاء اصطناعي — المنيا، مصر",
+    "hero.name1":"محمد","hero.name2":"عز",
+    "hero.role":"<strong>مطوّر AI وويب</strong> — بحوّل الأفكار لمنتجات حقيقية، وبضيف الذكاء الاصطناعي لما يكون محتاجه المشروع فعلًا.",
+    "hero.tag":"حاليًا بشتغل على مشاريع ML وفل ستاك، وبدرس علوم الحاسب والذكاء الاصطناعي.",
+    "hero.scroll":"مرّر لتحت",
+    "about.title":"نبذة عني",
+    "about.lede":"أنا طالب فرقة ثالثة في <strong>الحاسبات والذكاء الاصطناعي</strong>، بتعلّم عن طريق البناء الفعلي — بحوّل بيانات اللياقة، والبيانات البنكية، ومشاكل يومية لبرامج شغالة فعلًا.",
+    "about.body":"بهتم بحاجتين بنفس القد: إني أكتب سوفتوير الناس بتستخدمه فعلًا، وإني أفهم البيانات والموديلات اللي وراه. أكتر اهتماماتي هي تطوير الويب والذكاء الاصطناعي.",
+    "about.body2":"حاليًا بدور على فرص تدريب (Internship) وفريلانس أقدر أكمل فيها أبني حاجات حقيقية وأتعلم من ناس أكبر مني في الخبرة.",
+    "about.f1k":"مقيم في","about.f2k":"بيدرس","about.f2v":"حاسبات وذكاء اصطناعي",
+    "about.f3k":"الجامعة","about.f3v":"جامعة المنيا الأهلية",
+    "about.f4k":"التخرج المتوقع","about.f5k":"بيدور على","about.f5v":"تدريب، فريلانس",
+    "skills.title":"المهارات","skills.programming":"البرمجة","skills.dataanalysis":"تحليل البيانات",
+    "skills.ml":"تعلم الآلة","skills.viz":"التصوير البياني","skills.db":"قواعد البيانات","skills.tools":"أدوات",
+    "skills.other":"أخرى","skills.fullstack":"تطوير ويب متكامل",
+    "projects.title":"مشاريع مختارة",
+    "p.role":"الدور","p.live":"عرض حي","p.details":"دراسة الحالة",
+    "p.gymez.desc":"تطبيق ويب متكامل للياقة البدنية بيخصص خطة التمرين والتغذية على حسب بيانات جسم المستخدم وأهدافه، بدل خطة عامة للجميع.",
+    "p.gymez.role":"مطوّر فل ستاك",
+    "p.gymez.problem":"الناس اللي بتبدأ رحلة لياقة بدنية بتاخد غالبًا خطط عامة مش بتراعي حالتهم وأهدافهم ونمط حياتهم.",
+    "p.gymez.approach":"اتبنى بمنطق قواعد (بدون موديل ML): بيانات المستخدم بتوجّه منطق التمرين والتغذية، مع متابعة الوزن ورسومات بيانية للتقدم.",
+    "p.gymez.stack":"Next.js للتطبيق الكامل، Supabase كقاعدة بيانات، بالإضافة لـ API خارجي لصور التمارين وAPI للباركود.",
+    "p.gymez.features":"تسجيل بيانات المستخدم، متابعة الوزن، خطط تمرين مخصصة، نظام غذائي، ورسومات متابعة بصرية.",
+    "p.bank.title":"التنبؤ بالودائع البنكية",
+    "p.bank.desc":"بتدخل بيانات بروفايل العميل وتفاصيل المكالمة، والموديل بيقدّر احتمالية اشتراكه في وديعة لأجل.",
+    "p.bank.role":"فردي — تجهيز البيانات، النمذجة، والنشر",
+    "p.bank.problem":"التنبؤ بإذا كان عميل البنك هيشترك في وديعة لأجل، بناءً على بروفايله وتفاصيل مكالمة التسويق.",
+    "p.bank.dataset":"بيانات تسويق بنكي من Kaggle.",
+    "p.bank.model":"Logistic Regression، مع استكشاف وتنظيف البيانات باستخدام Pandas قبل النمذجة.",
+    "p.bank.results":"دقة عالية على بيانات الاختبار (بدون رقم محدد مسجل).",
+    "exp.title":"الخبرة",
+    "exp.nti.date":"شهر واحد · 6 ساعات يوميًا، من الأحد للخميس",
+    "exp.nti.role":"تدريب Machine Learning",
+    "exp.nti.desc":"تدريب مكثف 120 ساعة غطى إزاي تفكر في مشكلة ML، تختار الموديل المناسب، تستكشف البيانات (EDA)، وتنظفها قبل النمذجة.",
+    "exp.selftaught.date":"تعلّم ذاتي",
+    "exp.selftaught.role":"أساسيات Python و C++",
+    "exp.selftaught.org":"تعلّم ذاتي — يوتيوب",
+    "exp.selftaught.desc":"بنيت أساسيات برمجية قوية في Python وC++ قبل تطبيقها في مشاريع حقيقية.",
+    "edu.title":"التعليم","edu.degree":"بكالوريوس حاسبات وذكاء اصطناعي","edu.uni":"جامعة المنيا الأهلية",
+    "edu.status":"حاليًا في الفرقة الثالثة، والتخرج المتوقع 2027/2028.",
+    "cert.title":"الشهادات","cert.c1.name":"تدريب Machine Learning","cert.c2.name":"كورس Python","cert.c3.name":"كورس C++",
+    "cert.selftaught":"تعلّم ذاتي — يوتيوب",
+    "explore.m1":"بستكشف حاليًا",
+    "contact.title":"تواصل","contact.cta":"يلا نبني<br>حاجة حقيقية.",
+    "contact.cv":"تحميل السيرة الذاتية — قريبًا",
+    "form.name":"الاسم","form.email":"البريد الإلكتروني","form.message":"الرسالة","form.send":"إرسال الرسالة",
+    "form.note":"الفورم ده واجهة تجريبية — ينفع تربطه بخدمة إيميل عشان تستقبل الرسائل فعليًا.",
+    "footer.built":"تصميم وتطوير محمد عز","footer.top":"للأعلى ↑"
+  }
+};
+
+let currentLang = 'en';
+const originalEN = {};
+document.querySelectorAll('[data-i18n]').forEach(el => {
+  originalEN[el.getAttribute('data-i18n')] = el.innerHTML;
+});
+
+document.getElementById('langToggle').addEventListener('click', () => {
+  currentLang = currentLang === 'en' ? 'ar' : 'en';
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('langToggle').textContent = currentLang === 'ar' ? 'English' : 'العربية';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.innerHTML = (currentLang === 'ar' && translations.ar[key]) ? translations.ar[key] : originalEN[key];
+  });
+});
+
+window.addEventListener('load', () => {
+  document.getElementById('hero').classList.add('loaded');
+});
+
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('is-visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('[data-reveal]').forEach(el => revealObserver.observe(el));
+
+document.querySelectorAll('[data-reveal="stagger"] > *').forEach((child, i) => {
+  child.style.transitionDelay = (i * 0.08) + 's';
+});
+
+document.querySelectorAll('.project').forEach(proj => {
+  proj.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    const wasOpen = proj.classList.contains('is-open');
+    document.querySelectorAll('.project.is-open').forEach(p => p.classList.remove('is-open'));
+    if (!wasOpen) proj.classList.add('is-open');
+  });
+});
+
+document.querySelectorAll('.btn-magnetic:not(.btn-ghost)').forEach(btn => {
+  btn.addEventListener('mousemove', (e) => {
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    btn.style.transform = `translate(${x * 0.25}px, ${y * 0.4}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
+});
+</script>
+
+</body>
+</html>
