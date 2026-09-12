@@ -557,12 +557,15 @@
         </div>
       </div>
       <div data-reveal>
-        <form id="contactForm" onsubmit="event.preventDefault(); document.getElementById('formStatus').style.display='block'; this.reset();">
-          <div class="form-group"><label data-i18n="form.name">Name</label><input type="text" required></div>
-          <div class="form-group"><label data-i18n="form.email">Email</label><input type="email" required></div>
-          <div class="form-group"><label data-i18n="form.message">Message</label><textarea required></textarea></div>
+        <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
+          <input type="hidden" name="access_key" value="6bd643cd-9c55-42b1-88d9-4425248539a9">
+          <input type="hidden" name="subject" value="New message from portfolio contact form">
+          <input type="checkbox" name="botcheck" style="display:none;">
+          <div class="form-group"><label data-i18n="form.name">Name</label><input type="text" name="name" required></div>
+          <div class="form-group"><label data-i18n="form.email">Email</label><input type="email" name="email" required></div>
+          <div class="form-group"><label data-i18n="form.message">Message</label><textarea name="message" required></textarea></div>
           <button type="submit" class="btn-magnetic" data-i18n="form.send">Send Message</button>
-          <p class="form-note" id="formStatus" style="display:none;" data-i18n="form.note">This form is a front-end demo — connect it to an email service to receive messages.</p>
+          <p class="form-note" id="formStatus" style="display:none;"></p>
         </form>
       </div>
     </div>
@@ -707,6 +710,38 @@ menuBtn.addEventListener('click', () => {
 });
 mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+/* Contact form — Web3Forms submission */
+const contactForm = document.getElementById('contactForm');
+const formStatus = document.getElementById('formStatus');
+contactForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = contactForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = currentLang === 'ar' ? 'جارٍ الإرسال...' : 'Sending...';
+  submitBtn.disabled = true;
+
+  try {
+    const formData = new FormData(contactForm);
+    const res = await fetch(contactForm.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      formStatus.textContent = currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح — هرد عليك قريب.' : 'Message sent — I\'ll get back to you soon.';
+      contactForm.reset();
+    } else {
+      formStatus.textContent = currentLang === 'ar' ? 'حصل خطأ أثناء الإرسال، جرّب تاني أو ابعتلي إيميل مباشرة.' : 'Something went wrong — please try again or email me directly.';
+    }
+  } catch (err) {
+    formStatus.textContent = currentLang === 'ar' ? 'حصل خطأ في الاتصال، جرّب تاني أو ابعتلي إيميل مباشرة.' : 'Connection error — please try again or email me directly.';
+  }
+  formStatus.style.display = 'block';
+  submitBtn.textContent = originalText;
+  submitBtn.disabled = false;
+});
 
 document.querySelectorAll('.btn-magnetic:not(.btn-ghost)').forEach(btn => {
   btn.addEventListener('mousemove', (e) => {
