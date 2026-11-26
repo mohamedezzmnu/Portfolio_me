@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-palette="nile-silt" data-theme="dark">
+<html lang="en" dir="ltr" data-palette="nile-silt" data-theme="dark" class="is-world-entering">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,46 +10,60 @@
 <meta name="description" content="Mohamed Ezz — AI & Machine Learning Developer. Portfolio of machine learning and full-stack web projects.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas class="pixel-landscape-canvas" aria-hidden="true"></canvas>
+<canvas class="scene" aria-hidden="true"></canvas>
 
-<div class="dock">
-  <div class="pal-wrap">
-    <button id="palBtn" aria-label="Palette" aria-haspopup="listbox" aria-expanded="false"><span class="pal-dot"></span></button>
-    <div class="pal-menu" id="palMenu" role="listbox"></div>
-  </div>
-  <button id="themeBtn" aria-label="Toggle light / dark"></button>
-  <button id="langBtn" aria-label="Switch language">ع</button>
-</div>
+<nav class="dock" aria-label="utilities">
+  <button class="dbtn" id="palBtn" aria-label="palette" aria-haspopup="listbox" aria-expanded="false">
+    <svg class="morph" aria-hidden="true"><path class="mpath"/></svg>
+    <span class="pal-dot" aria-hidden="true"></span>
+  </button>
+  <button class="dbtn" id="themeBtn" aria-label="toggle light / dark">
+    <svg class="morph" aria-hidden="true"><path class="mpath"/></svg>
+    <span class="dic" aria-hidden="true"></span>
+  </button>
+  <button class="dbtn" id="langBtn" aria-label="switch language">
+    <svg class="morph" aria-hidden="true"><path class="mpath"/></svg>
+    <span class="dlg-label" aria-hidden="true">ع</span>
+  </button>
+</nav>
+<div class="pal-pop" id="palMenu" role="listbox" aria-label="palette"></div>
 
-<main class="stage">
+<main class="shell">
   <div class="grid">
     <section class="ident">
       <div class="who">
         <div class="avatar" role="img" aria-label="Mohamed Ezz"></div>
-        <div>
+        <div class="who-txt">
           <h1 data-t="name"></h1>
-          <div class="sub"><span data-t="sub"></span></div><button class="more" id="moreBtn" data-t="more"></button>
+          <div class="sub"><span data-t="sub"></span><span class="sep" aria-hidden="true">·</span><button class="more" id="moreBtn" data-t="more"></button></div>
         </div>
       </div>
       <p class="pitch" data-t="pitch"></p>
       <p class="pitch2" data-t="pitch2"></p>
       <div class="btns">
-        <a class="btn primary" href="https://github.com/mohamedezzmnu" target="_blank" rel="noopener">GitHub ↗</a>
-        <button class="btn" id="msgBtn" data-t="msg"></button>
-        <button class="btn" id="copyBtn" data-t="copy"></button>
+        <a class="btn primary jelly" href="https://github.com/mohamedezzmnu" target="_blank" rel="noopener">github <span class="arr">↗</span></a>
+        <button class="btn jelly" id="msgBtn" data-t="msg"></button>
+        <button class="btn jelly" id="copyBtn" data-t="copy"></button>
       </div>
       <div class="icons" id="icons"></div>
     </section>
-    <section class="panel-col">
-      <div class="tabs" id="tabs" role="tablist"></div>
-      <div class="panel" id="panel"></div>
+    <section class="panel-col" id="panelCol">
+      <svg class="poutline" aria-hidden="true">
+        <defs><clipPath id="pclip" clipPathUnits="userSpaceOnUse"><path id="pclipPath"/></clipPath></defs>
+        <path id="pstroke" fill="none"/>
+      </svg>
+      <div class="pbg" aria-hidden="true"></div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="sections"></div>
+      <div class="panel" id="panel" role="tabpanel"></div>
     </section>
   </div>
 </main>
+
+<div class="print-all" id="printAll" aria-hidden="true"></div>
 
 <script src="landscape.js"></script>
 <script src="app.js"></script>
