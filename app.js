@@ -109,6 +109,7 @@ function applyLang(){
   document.title=lang==='ar'?'محمد عز — مطوّر AI و Machine Learning':'Mohamed Ezz — AI & Machine Learning Developer';
   $('#palMenu').innerHTML=PALS.map(([k,c])=>`<button role="option" data-p="${k}" aria-selected="${k===pal}"><i style="background:${c}"></i>${t.palettes[k]}</button>`).join('');
   renderTabs();renderPanel(false);
+  setTimeout(()=>{window.landscape&&window.landscape.relayout&&window.landscape.relayout()},120);
 }
 function renderTabs(){
   const t=T[lang];
