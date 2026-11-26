@@ -155,11 +155,17 @@ h1{font-size:23px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
   body{overflow:auto}
   .stage{display:block;padding:72px 16px 64px;min-height:0}
   .grid{display:flex;flex-direction:column;gap:28px;align-items:stretch;max-width:640px;margin:0 auto}
-  .ident{padding-bottom:0;align-self:auto}
+  .ident{padding-bottom:0;align-self:auto;margin-bottom:0}
   .pitch{font-size:17px}
   .pitch2{font-size:14px}
   .dock{top:10px;inset-inline-end:10px}
-  .panel{height:auto;min-height:420px}
+  .panel{height:auto;min-height:0}
+  .stage{padding-bottom:16px;min-height:100vh;min-height:100svh}
+  .grid{min-height:calc(100svh - 88px)}
+  .panel-col{margin-top:auto;display:flex;flex-direction:column;flex:1 1 auto;max-height:none}
+  .panel{flex:1 1 auto;min-height:56svh;border-radius:20px}
+  .pitch{font-size:17px}.pitch2{font-size:14.5px}
+  .bul li{font-size:14px}
   .split{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .list{flex-direction:row;border-inline-end:0;border-bottom:1px solid var(--line);overflow-x:auto;padding:10px}
   .item{min-width:210px;flex:none}
@@ -198,3 +204,125 @@ html,body{max-width:100%;overflow-x:hidden}
 :root[data-theme="light"] .chip.t{color:color-mix(in srgb,var(--c) 38%,#000);border-color:color-mix(in srgb,var(--c) 70%,#000 10%);background:color-mix(in srgb,var(--c) 20%,transparent)}
 :root[data-theme="light"] .chip{color:var(--ink);border-color:color-mix(in srgb,var(--ink) 30%,transparent)}
 :root[data-theme="light"] .chip.t{color:color-mix(in srgb,var(--c) 26%,#000);border-color:color-mix(in srgb,var(--c) 55%,#000);background:color-mix(in srgb,var(--c) 22%,transparent)}
+
+/* desktop: roomier card and slightly larger type, scaled to the window */
+@media (min-width:1024px){
+  .grid{max-width:1240px;grid-template-columns:minmax(0,430px) minmax(0,760px)}
+  .panel{height:clamp(436px,calc(100vh - 190px),640px)}
+  .pitch{font-size:16px}.pitch2{font-size:14px}.sub{font-size:13px}
+  .item b{font-size:16px}.bul li{font-size:13.5px}
+  .ident{margin-bottom:5vh}
+}
+
+/* soft depth behind buttons and icon buttons, tuned per theme; spacing on a steady 8/16/24 rhythm */
+.btn,.ibtn{box-shadow:0 6px 18px -4px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.3),inset 0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent)}
+.btn:hover,.ibtn:hover{box-shadow:0 10px 24px -6px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.3),inset 0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent)}
+:root[data-theme="light"] .btn,:root[data-theme="light"] .ibtn{box-shadow:0 6px 16px -5px rgba(60,40,10,.28),0 1px 3px rgba(60,40,10,.15)}
+.btns{margin-top:24px;gap:8px}
+.icons{margin-top:16px;gap:8px}
+.pitch{margin-top:24px}
+.pitch2{margin-top:8px}
+.panel{box-shadow:0 18px 48px -16px rgba(0,0,0,.55)}
+@media (max-width:1023px){.grid{gap:24px}}
+
+/* interaction feel: gentle lift on hover, press-in on tap, smooth springy transitions */
+.btn,.ibtn,.tab,.item,.dock button{transition:transform .18s cubic-bezier(.3,1.4,.5,1),box-shadow .2s ease,background-color .16s,border-color .16s,color .16s,border-radius .25s,opacity .16s}
+@media (hover:hover){.btn:hover,.ibtn:hover{transform:translateY(-2px)}.item:hover{transform:translateX(2px)}}
+.btn:active,.ibtn:active,.dock button:active{transform:translateY(0) scale(.96);box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+.tab:active,.item:active{transform:scale(.98)}
+.dock{box-shadow:0 10px 28px -10px rgba(0,0,0,.55)}
+@media (prefers-reduced-motion:reduce){.btn,.ibtn,.tab,.item{transform:none!important}}
+
+/* coordination pass: card and text block share a baseline, tabs sit close to the icon row */
+@media (min-width:1024px){
+  .stage{padding-bottom:112px}
+  .panel{height:clamp(436px,calc(100vh - 262px),600px)}
+  .grid{align-items:end}
+  .ident{margin-bottom:0}
+}
+@media (max-width:1023px){
+  .grid{gap:14px}
+  .ident{margin-bottom:0}
+  .stage{padding-top:64px}
+}
+
+/* polish pass: glass card, tab that joins the card, calmer type scale, sky left open on phones */
+.panel{background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent 38%),var(--panel);backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);box-shadow:0 22px 56px -18px rgba(0,0,0,.6),inset 0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent)}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent),var(--panel);border-radius:12px 12px 0 0;box-shadow:0 -8px 24px -14px rgba(0,0,0,.5)}
+.tab[aria-selected="true"]::before{content:"";position:absolute;left:0;right:0;bottom:-2px;height:3px;background:var(--panel-solid);opacity:.0}
+.item{border:1px solid transparent}
+.item[aria-selected="true"]{border-color:var(--line);box-shadow:0 8px 20px -12px rgba(0,0,0,.55)}
+.chip-date{box-shadow:0 4px 12px -6px rgba(0,0,0,.5)}
+.who{gap:14px}
+.avatar{box-shadow:0 8px 22px -8px rgba(0,0,0,.6);border-color:color-mix(in srgb,var(--ink) 18%,transparent)}
+@media (min-width:1024px){
+  .detail{padding:26px 32px 20px}
+  .list{padding:18px 12px;gap:8px}
+  .tabs{gap:4px;padding-inline-start:6px}
+  .pitch{max-width:40ch}.pitch2{max-width:46ch}
+}
+@media (max-width:1023px){
+  .stage{padding-top:calc(18svh + 20px)}
+  .grid{min-height:calc(82svh)}
+  h1{font-size:22px}
+  .pitch{font-size:15.5px;margin-top:18px}
+  .pitch2{font-size:13.5px;margin-top:6px}
+  .btn{height:38px;padding:0 16px}
+  .ibtn{width:38px;height:38px}
+  .panel{min-height:48svh;border-radius:18px}
+  .detail{padding:20px 20px 16px}
+  .dhead h2{font-size:20px}
+}
+@media (min-width:1024px){.item b{font-size:15px}.item{padding:14px 10px}.list{padding:18px 10px}}
+
+/* shadows only behind the icon buttons */
+.btn,.btn:hover,.btn:active,.panel,.tab[aria-selected="true"],.item[aria-selected="true"],.chip-date,.avatar,.dock,:root[data-theme="light"] .btn{box-shadow:none}
+.ibtn:active{box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+
+/* no shadow or glow behind words: shadows live only behind the icon buttons */
+*{text-shadow:none!important}
+.ident::before{background:none!important;content:none!important}
+
+/* alignment pass: text block and card start on one top line, both low, sky open above, clouds clear of the text */
+@media (min-width:1024px){
+  .stage{align-items:flex-start;padding-top:28vh;padding-bottom:0}
+  .grid{align-items:start}
+  .ident{align-self:start;margin-bottom:0}
+  .panel-col{align-self:start}
+  .panel{height:clamp(340px,calc(72vh - 150px),520px)}
+}
+@media (max-width:1023px){
+  .stage{padding-top:calc(34svh)}
+  .grid{min-height:0}
+}
+
+/* phone composition: hero high, sky gap, card runs to the bottom edge; roomier icon buttons */
+@media (max-width:1023px){
+  .stage{padding-top:64px;padding-bottom:0}
+  .grid{min-height:calc(100svh - 64px);gap:0}
+  .ident{margin-bottom:24px}
+  .panel-col{margin-top:auto}
+  .panel{min-height:46svh;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0}
+  .ibtn{width:44px;height:44px;border-radius:15px}
+  .icons{gap:10px;margin-top:18px}
+  .btns{margin-top:22px}
+}
+@media (max-width:1023px){
+  .panel{height:44svh;min-height:0;overflow:hidden}
+  .view,.split{height:100%}
+  .split{grid-template-rows:auto minmax(0,1fr)}
+  .split>#detail,.detail{height:100%;overflow:hidden;min-height:0}
+  .dbody{overflow:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .full{height:100%;overflow:auto}
+  .grid{min-height:calc(100svh - 64px)}
+}
+@media (max-width:1023px){.panel{flex:0 0 auto}.panel-col{flex:0 0 auto}}
+@media (max-width:1023px){.panel{height:40svh}}
+/* phone type scale matched to the reference's proportions (own values) */
+@media (max-width:1023px){
+  .stage{padding-inline:20px}
+  .pitch{font-size:15px;font-weight:600;line-height:1.55}
+  .pitch2{font-size:13px;line-height:1.6}
+  .btn{height:38px;font-size:12px;padding:0 16px}
+  .tab{font-size:11.7px}
+}
