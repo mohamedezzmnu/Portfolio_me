@@ -536,7 +536,7 @@ function uploadCloudSprite(){
 }
 
 function initGL(){
- gl=canvas.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:true});
+ gl=canvas.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:false});
  if(!gl){window.__glerr='no-webgl';fallback2d();return false;}
  const sh=(t,src)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){window.__glerr=gl.getShaderInfoLog(s);return null;}return s;};
@@ -556,10 +556,12 @@ function fallback2d(){const c=canvas.getContext('2d');const g=c.createLinearGrad
  const s=SCENES[pal][mode];g.addColorStop(0,s.sky[0]);g.addColorStop(.6,s.sky[3]);g.addColorStop(.63,s.water[0]);g.addColorStop(1,s.water[2]);
  c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);
  drawReeds(performance.now());}
+let qual=1,lastW=0,lastH=0;
 function size(){
  const dpr=Math.min(devicePixelRatio||1,2);
  let w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);
- const cap=1600000,scale=Math.min(1,Math.sqrt(cap/(w*h)));
+ lastW=innerWidth;lastH=innerHeight;
+ const cap=1600000,scale=Math.min(1,Math.sqrt(cap/(w*h)))*qual;
  canvas.width=Math.max(2,Math.round(w*scale));canvas.height=Math.max(2,Math.round(h*scale));
  rcan.width=canvas.width;rcan.height=canvas.height;
  buildBlades();
@@ -578,7 +580,18 @@ function frame(now){
  gl.uniform4fv(U.uRip,rp);
  gl.drawArrays(gl.TRIANGLES,0,3);
 }
-function loop(now){frame(now);drawReeds(now);if(!reduce)raf=requestAnimationFrame(loop);}
+/* smooth scrolling: draw at most ~30 fps (the scene is slow dithered pixel art), and
+   lower the render resolution step by step if frames still take too long */
+let lastDraw=0,slow=0,lastTick=0;
+function loop(now){
+ if(!reduce)raf=requestAnimationFrame(loop);
+ if(now-lastDraw<29)return;
+ const dt=now-lastTick;lastTick=now;lastDraw=now;
+ /* dt well above the 33 ms target means the device cannot keep up */
+ if(dt>45&&dt<400&&(intro0<0||now-intro0>INTRO_MS+300)){if(++slow>=12&&qual>.45){qual=Math.max(.45,qual*.82);slow=0;size();}}
+ else if(slow>0)slow--;
+ frame(now);drawReeds(now);
+}
 
 palA=packPal(pal,mode);palB=palA;
 function start(){
@@ -612,7 +625,11 @@ addEventListener('pointerdown',e=>{
  const y=1-e.clientY/innerHeight;
  if(y<.365)ripples.push({x:e.clientX/innerWidth,y,t0:performance.now(),s:.8});
 });
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(start,150)});
+/* mobile address-bar show/hide while scrolling fires a resize with the same width:
+   ignore it, the fixed canvas just stretches by a few pixels */
+let rt;addEventListener('resize',()=>{
+ if(innerWidth===lastW&&Math.abs(innerHeight-lastH)<200)return;
+ clearTimeout(rt);rt=setTimeout(start,150)});
 document.addEventListener('visibilitychange',()=>{if(reduce)return;
  if(document.hidden)cancelAnimationFrame(raf);else raf=requestAnimationFrame(loop)});
 start();
