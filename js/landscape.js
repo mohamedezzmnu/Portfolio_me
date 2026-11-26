@@ -32,7 +32,7 @@ const easeO=t=>1-Math.pow(1-t,3);
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function hash(n){n=Math.imul(n^n>>>16,2246822519);n=Math.imul(n^n>>>13,3266489917);return((n^n>>>16)>>>0)/4294967296}
 
-const cv=document.querySelector('.scene');if(!cv)return;
+const cv=document.getElementById('scene');if(!cv)return;
 const ctx=cv.getContext('2d');
 const snapT=(location.hash.match(/snap=([0-9.]+)/)||[])[1];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches||snapT!==undefined;
@@ -569,12 +569,12 @@ addEventListener('pointermove',e=>{
   const {d}=curColors();
   const ox=(d>.5?(.63+.14*(1-d)):(.37-.14*d))*W,oy=H*(1-(d>.5?.86-(0.56*(1-d)*(1-d)+.05*(1-d)):(.87-.56*d*d-.05*d)));
   const overOrb=Math.hypot(e.clientX-ox,e.clientY-oy)<.075*H;
-  const overUI=e.target&&e.target.closest&&e.target.closest('.dock,.pal-pop,.panel-col,.ident,button,a,.ovl');
+  const overUI=e.target&&e.target.closest&&e.target.closest('.dock,.palette-pop,.identity,.panel,.ovl,button,a');
   document.body.style.cursor=overOrb&&!overUI?'pointer':'';
 },{passive:true});
 addEventListener('pointerleave',()=>{pointerIn=0});
 addEventListener('click',e=>{
-  if(e.target&&e.target.closest&&e.target.closest('.dock,.pal-pop,.panel-col,.ident,button,a,.ovl,input,textarea'))return;
+  if(e.target&&e.target.closest&&e.target.closest('.dock,.palette-pop,.identity,.panel,.ovl,button,a,input,textarea'))return;
   const {d}=curColors();
   const ox=(d>.5?(.63+.14*(1-d)):(.37-.14*d))*W;
   const oy=H*(1-(d>.5?.86-(0.56*(1-d)*(1-d)+.05*(1-d)):(.87-.56*d*d-.05*d)));
