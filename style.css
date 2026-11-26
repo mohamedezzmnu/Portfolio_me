@@ -1,4 +1,6 @@
+@property --scrim{syntax:'<color>';inherits:true;initial-value:#0d0c0b}
 :root{
+  --scrim:var(--bg);
   --bg:#0d0c0b;--panel:rgba(20,19,17,.88);--panel-solid:#141311;--ink:#f3ede4;--body:#c4bbb0;--muted:#9b9185;--accent:#d4a359;--accent-ink:#120f0b;
   --line:color-mix(in srgb,var(--ink) 12%,transparent);
   --surface:color-mix(in srgb,var(--ink) 7%,transparent);
@@ -43,7 +45,7 @@ a{color:inherit;text-decoration:none}
 .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:56px}
 .grid{display:grid;grid-template-columns:minmax(0,409px) minmax(0,707px);gap:52px;align-items:center;width:100%;max-width:1168px}
 .ident{align-self:end;margin-bottom:6vh;animation:up .6s both;position:relative;isolation:isolate}
-.ident::before{content:"";position:absolute;inset:-36px -48px -30px -48px;z-index:-1;background:radial-gradient(ellipse at 45% 50%,color-mix(in srgb,var(--bg) 72%,transparent) 0%,color-mix(in srgb,var(--bg) 55%,transparent) 55%,transparent 80%);filter:blur(10px)}
+.ident::before{content:"";position:absolute;inset:-36px -48px -30px -48px;z-index:-1;background:radial-gradient(ellipse at 45% 50%,color-mix(in srgb,var(--scrim) 72%,transparent) 0%,color-mix(in srgb,var(--scrim) 55%,transparent) 55%,transparent 80%);filter:blur(10px);transition:--scrim .22s ease}
 .panel-col{animation:up .6s .06s both}
 @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .who{display:flex;gap:16px;align-items:center}
@@ -168,6 +170,27 @@ h1{font-size:23px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
   .cards,.crow,.facts{grid-template-columns:1fr}
   .view{height:auto}
 }
+
+/* glgl-style entrance: each UI element slides in from its outer edge with a light spring,
+   the panel column from its side, the dock drops from the top. Direction-aware (rtl mirrors). */
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes slide-l{from{opacity:0;transform:translateX(-52px)}to{opacity:1;transform:none}}
+@keyframes slide-r{from{opacity:0;transform:translateX(52px)}to{opacity:1;transform:none}}
+@keyframes drop-in{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:none}}
+.enter .who{animation:slide-l .7s cubic-bezier(.3,1.45,.5,1) both}
+.enter .pitch{animation:slide-l .7s cubic-bezier(.3,1.45,.5,1) .07s both}
+.enter .pitch2{animation:slide-l .7s cubic-bezier(.3,1.45,.5,1) .13s both}
+.enter .btns{animation:slide-l .7s cubic-bezier(.3,1.45,.5,1) .19s both}
+.enter .icons{animation:slide-l .7s cubic-bezier(.3,1.45,.5,1) .24s both}
+.enter .panel-col{animation:slide-r .8s cubic-bezier(.3,1.45,.5,1) .1s both}
+.enter .dock{animation:drop-in .6s cubic-bezier(.3,1.45,.5,1) .3s both}
+[dir="rtl"] .enter .who,[dir="rtl"] .enter .pitch,[dir="rtl"] .enter .pitch2,[dir="rtl"] .enter .btns,[dir="rtl"] .enter .icons{animation-name:slide-r}
+[dir="rtl"] .enter .panel-col{animation-name:slide-l}
+body,body *{transition-property:background-color,color,border-color,fill,stroke;transition-duration:.22s;transition-timing-function:ease}
+body.theme-sync,body.theme-sync *{transition-duration:.9s}
+body.palette-sync,body.palette-sync *{transition-duration:.4s}
+body.theme-sync .ident::before{transition-duration:.9s}
+body.palette-sync .ident::before{transition-duration:.4s}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html,body{max-width:100%;overflow-x:hidden}
 .grid>*{min-width:0}
