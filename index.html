@@ -17,12 +17,12 @@
 <canvas class="pixel-landscape-canvas" aria-hidden="true"></canvas>
 
 <div class="dock">
-  <button id="langBtn" aria-label="Switch language">ع</button>
-  <button id="themeBtn" aria-label="Toggle light / dark"></button>
   <div class="pal-wrap">
     <button id="palBtn" aria-label="Palette" aria-haspopup="listbox" aria-expanded="false"><span class="pal-dot"></span></button>
     <div class="pal-menu" id="palMenu" role="listbox"></div>
   </div>
+  <button id="themeBtn" aria-label="Toggle light / dark"></button>
+  <button id="langBtn" aria-label="Switch language">ع</button>
 </div>
 
 <main class="stage">
@@ -32,7 +32,7 @@
         <div class="avatar" role="img" aria-label="Mohamed Ezz"></div>
         <div>
           <h1 data-t="name"></h1>
-          <p class="sub"><span data-t="sub"></span> · <button id="moreBtn" data-t="more"></button></p>
+          <div class="sub"><span data-t="sub"></span></div><button class="more" id="moreBtn" data-t="more"></button>
         </div>
       </div>
       <p class="pitch" data-t="pitch"></p>
