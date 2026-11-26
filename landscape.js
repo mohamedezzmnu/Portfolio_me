@@ -1,7 +1,6 @@
-/* Pixel-landscape background: original WebGL fragment-shader renderer.
-   Procedural sky, corner cumulus clouds, sun/moon, streaked water with glitter
-   reflection, and dense bent reeds. Re-themed by palette + light/dark.
-   Written from scratch for this portfolio (standard noise/hash techniques only). */
+/* Pixel-landscape background: original 2D canvas smooth anti-aliased art drawn at full resolution.
+   Layers: dithered sky, stars or birds, crescent moon or sun, drifting pixel clouds, horizon, water with
+   shimmering streaks, swaying reeds. Re-themed by palette and light/dark. Written from scratch. */
 (function(){
 const SCENES={
  'nile-silt':{
@@ -17,645 +16,186 @@ const SCENES={
   dark:{sky:['#05080e','#0a0d14','#101828','#182640'],water:['#101a30','#070c18'],cloud:['#1b2434','#31446a','#6c8bb4'],orb:'#eef2f8',reed:'#8fb89f',streak:'#c4d6ee'},
   light:{sky:['#97aac4','#bccadc','#dbe3ec','#e6e9ee'],water:['#758ca6','#526882'],cloud:['#a5b3c8','#c5d0de','#e7edf4'],orb:'#ffe9a8',reed:'#5d8468',streak:'#fff6d8'}}
 };
-const INTRO_MS=2000, TRANS_MS=900;
-const hex=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];
-const mixc=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
-
-const FRAG=`
-precision highp float;
-uniform vec2 uRes;uniform float uTime;uniform float uIntro;uniform float uMix;uniform float uDayF;
-uniform vec3 uPalA[12];uniform vec3 uPalB[12];
-uniform vec4 uRip[4];
-uniform sampler2D uCloudTex;
-const float HY=0.365;
-
-float h11(float n){return fract(sin(n*127.1)*43758.5453);}
-float Bayer2(vec2 a){a=floor(a);return fract(a.x/2.+a.y*a.y*.75);}
-float Bayer4(vec2 a){return Bayer2(.5*a)*.25+Bayer2(a);}
-float h12(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
-float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
- return mix(mix(h12(i),h12(i+vec2(1.,0.)),f.x),mix(h12(i+vec2(0.,1.)),h12(i+vec2(1.,1.)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*vnoise(p);p=p*2.13+vec2(7.3,3.1);a*=.5;}return v;}
-
-float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
-float cloudS(vec2 p,float seed){
- /* small drifter: a few strongly overlapped, vertically squashed balls merging
-    into ONE irregular flattened puff (no beads, no rectangular base) */
- float d=1e3;
- for(int i=0;i<6;i++){
-  float fi=float(i);
-  float j1=h12(vec2(seed,fi*3.7)),j2=h12(vec2(seed+9.,fi*7.1)),j3=h12(vec2(seed+31.,fi*5.3));
-  float lx=.5+(j1-.5)*.52;
-  float ly=.44+(j2-.5)*.20;
-  float rad=.21+j3*.09;
-  float dd=length((p-vec2(lx,ly))*vec2(1.,1.55))-rad;
-  d=i==0?dd:smin(d,dd,.13);                       /* single merged puff */
- }
- d+=(vnoise(p*vec2(7.,8.)+seed*3.3)-.5)*.03;
- return d;
-}
-float cd(vec2 p,float seed,int kind){return cloudS(p,seed);}
-vec4 cloud(vec2 uv,vec2 c,vec2 r,float seed,vec3 c0,vec3 c1,vec3 c2,float t,int kind){
- c.x+=sin(t*.02+seed*6.1)*.014;
- vec2 p=(uv-c)/r+.5;
- if(p.x<-.3||p.x>1.3||p.y<-.3||p.y>1.4)return vec4(0.);
- float d=cd(p,seed,kind);
- float body=smoothstep(.007,-.007,d);
- if(body<=0.)return vec4(0.);
- /* per-lobe relief: the SDF gradient inside a ball points outward from its
-    center, so lighting it shades every ball top-lit, bottom-shaded */
- float e=.025;
- float dx=cd(p+vec2(e,0.),seed,kind)-d;
- float dy=cd(p+vec2(0.,e),seed,kind)-d;
- vec2 n=vec2(dx,dy)/e;
- float nl=max(length(n),.35);
- float bump=dot(n/nl,vec2(-.25,.97))*min(nl*.6,1.);
- float lit=clamp(.38+bump*.58+smoothstep(.15,.9,p.y)*.14,0.,1.);
- vec3 cc=lit<.5?mix(c0,c1,lit*2.):mix(c1,c2,(lit-.5)*2.);
- return vec4(cc,body);
-}
-
-float sdens(vec2 p,float seed,float t){
- float e=length(p*vec2(1.,1.9));
- float n=fbm(p*vec2(2.6,3.4)+seed+vec2(t*.012,0.));
- return smoothstep(1.,.25,e+(n-.5)*1.05);
-}
-vec4 softCloud(vec2 uv,vec2 c,vec2 r,float seed,vec3 c0,vec3 c1,vec3 c2,float t){
- vec2 p=(uv-c)/r;
- if(abs(p.x)>1.6||abs(p.y)>1.6)return vec4(0.);
- float d=sdens(p,seed,t);
- if(d<=.01)return vec4(0.);
- float up=sdens(p+vec2(.03,.2),seed,t);
- float lit=clamp(.42+(d-up)*2.4+(1.-length(p))*.12,0.,1.);
- vec3 cc=lit<.5?mix(c0,c1,lit*2.):mix(c1,c2,(lit-.5)*2.);
- return vec4(cc,smoothstep(.02,.55,d)*.88);
-}
-/* one grass blade SDF helper (unused by scene; reeds render on the 2D overlay) */
-
-vec3 scene(vec2 uv,vec3 P0,vec3 P1,vec3 P2,vec3 P3,vec3 P4,vec3 P5,vec3 P6,vec3 P7,vec3 P8,vec3 P9,vec3 P10,vec3 P11,float dayF,float t){
- float asp=uRes.x/uRes.y;
- vec3 col;
- /* celestial bodies ride their own rise/set curves */
- float sunY=mix(-.18,.80,smoothstep(.05,.95,dayF));
- float moonY=mix(.80,-.18,smoothstep(.05,.95,dayF));
- vec2 sunP=vec2(.62,sunY),moonP=vec2(.24,moonY);
- if(asp<.9){sunP=vec2(.5,mix(-.18,.5,smoothstep(.05,.95,dayF)));moonP=vec2(.5,mix(.5,-.18,smoothstep(.05,.95,dayF)));} /* phones: keep the orb in the top-right corner, clear of the text and icons */
- float sunUp=clamp(dayF*1.6-.3,0.,1.),moonUp=clamp((1.-dayF)*1.6-.3,0.,1.);
- vec2 orbP=dayF>.5?sunP:moonP;
- float orbUp=max(sunUp,moonUp);
-
- if(uv.y>HY){
-  float g=(uv.y-HY)/(1.-HY);
-  col=g<.5?mix(P2,P1,g*2.):mix(P1,P0,(g-.5)*2.);
-  col+=(vnoise(gl_FragCoord.xy/3.1)-.5)*.011;   /* fine isotropic sky grain, no streaks */
-  /* warm haze near the sun */
-  if(sunUp>0.){
-   vec2 od=(uv-sunP)*vec2(asp,1.);
-   col=mix(col,P9,exp(-length(od)*7.)*.13*sunUp);
-  }
-  /* stars */
-  if(dayF<1.){
-   vec2 sc=vec2(uv.x*asp,uv.y)*46.;
-   vec2 cell=floor(sc);
-   float sh=h12(cell);
-   if(sh>.885){
-    vec2 sp=vec2(h12(cell+7.13),h12(cell+3.71));
-    float sd=length((fract(sc)-sp)*vec2(1.,1.));
-    float tw=.5+.5*sin(t*(1.+sh*2.)+sh*43.);
-    float br=(.35+.65*h12(cell+1.91))*tw*(1.-dayF);
-    col=mix(col,vec3(.96,.94,.9),smoothstep(.13,.02,sd)*br*.9);
-   }
-  }
-  /* clouds: each side tower = two stacked squarish clusters (keeps lobes round),
-     plus horizon mounds and small drifters; y-radii aspect-compensated */
-  float casp=min(asp/.462,3.);
-  /* corner cumulus banks: pre-rendered curved-path sprite (2D canvas union of
-     true ellipses, per-lobe top-lit shading in luminance), tinted by palette */
-  vec2 cuv=vec2(clamp(uv.x+sin(t*.02)*.008,0.,1.),uv.y);
-  vec4 cs=texture2D(uCloudTex,cuv);
-  float por=1.-smoothstep(.8,.95,asp);
-  cs.a*=0.;
-  if(cs.a>.003){
-   float lit=cs.r;
-   /* multi-anchor bank tint: derived shadow/highlight anchors extend the
-      palette range so shaded patches read (P6..P8 alone compress contrast) */
-   vec3 cd=P6*.72;
-   vec3 cm=mix(P6,P7,.4);
-   vec3 cb=mix(P8,vec3(1.),.25);
-   vec3 cc=lit<.30?mix(cd,P6*.9,lit/.30)
-         :lit<.50?mix(P6*.9,P6,(lit-.30)/.20)
-         :lit<.65?mix(P6,cm,(lit-.50)/.15)
-         :lit<.85?mix(cm,P8,(lit-.65)/.20)
-         :mix(P8,cb,(lit-.85)/.15);
-   vec3 ccd=lit<.25?P6
-          :lit<.50?mix(P6,P7,(lit-.25)/.25)
-          :lit<.80?mix(P7,P8,(lit-.50)/.30)
-          :mix(P8,cb,(lit-.80)/.20);
-   cc=mix(ccd,cc,dayF);
-   float cl=dot(cc,vec3(.299,.587,.114));
-   cc=mix(cc,vec3(cl),.12);
-   col=mix(col,cc,cs.a);
-  }
-  vec4 cl;
-  cl=cloud(uv,mix(vec2(.33,.66),vec2(.14,.485),por),mix(vec2(.11,.055*casp),vec2(.13,.03*casp),por),12.2,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.9*0.);
-  cl=cloud(uv,mix(vec2(.58,.60),vec2(.88,.50),por),mix(vec2(.08,.045*casp),vec2(.12,.028*casp),por),15.8,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.85*0.);
-  {
-   vec2 a1=mix(vec2(.14,.90),vec2(.16,.50),por),a2=mix(vec2(.80,.84),vec2(.86,.455),por),a3=mix(vec2(.46,.93),vec2(.60,.57),por);
-   vec2 r1=mix(vec2(.11,.085),vec2(.17,.030*casp),por),r2=mix(vec2(.14,.095),vec2(.20,.034*casp),por),r3=mix(vec2(.08,.06),vec2(.13,.020*casp),por);
-   cl=softCloud(uv,a1,r1,3.1,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a);
-   cl=softCloud(uv,a2,r2,8.7,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a);
-   cl=softCloud(uv,a3,r3,5.3,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a*.7);
-  }
-  /* birds by day */
-  if(dayF>.02){
-   for(int i=0;i<3;i++){
-    float fi=float(i);
-    vec2 bp=vec2(fract(t*.006+fi*.37)*1.3-.15,.70+fi*.045+sin(t*.5+fi*2.)*.008);
-    vec2 dd=(uv-bp)*uRes;
-    float fl=sin(t*5.+fi*2.6)>0.?1.:-1.;
-    float wing=abs(dd.y-abs(dd.x)*.62*fl*.8);
-    float bm=(1.-smoothstep(.6,1.4,wing))*step(abs(dd.x),5.)*step(1.2,abs(dd.x));
-    col=mix(col,P0*.55,bm*.5*dayF);
-   }
-  }
-  /* sun */
-  if(sunUp>0.){
-   vec2 od=(uv-sunP)*vec2(asp,1.);
-   float d=length(od);
-   col=mix(col,P9,exp(-d*8.)*.16*sunUp);
-   col=mix(col,P9,smoothstep(.052,.044,d)*sunUp);
-   col=mix(col,P9*1.10,smoothstep(.032,.016,d)*sunUp*.5);
-  }
-  /* crescent moon */
-  if(moonUp>0.){
-   vec2 od=(uv-moonP)*vec2(asp,1.);
-   float d=length(od);
-   col=mix(col,P9,exp(-d*16.)*.22*moonUp);
-   float body=smoothstep(.040,.034,d);
-   float d2=length((uv-moonP-vec2(.018,.009))*vec2(asp,1.));
-   body*=smoothstep(.032,.038,d2);
-   col=mix(col,vec3(.95,.93,.88),body*moonUp);
-  }
- }else{
-  /* water */
-  float dp=(HY-uv.y)/HY;
-  col=mix(P3,P5,pow(dp,.72));
-  col=mix(col,P11,exp(-(HY-uv.y)*95.)*.5);            /* horizon light line */
-  float sn=vnoise(vec2(uv.x*9.+t*.025,uv.y*230.));
-  col=mix(col,P11,smoothstep(.78,.95,sn)*.07*(1.-dp*.6));
-  float sn2=vnoise(vec2(uv.x*21.-t*.016,uv.y*85.));
-  col=mix(col,P11,smoothstep(.82,.96,sn2)*.05*(1.-dp*.4));
-  col+=(vnoise(vec2(uv.x*60.,uv.y*400.))-.5)*.02;
-  /* glitter column under the risen body: broad irregular bright dashes */
-  if(orbUp>.02){
-   float cw=(.07+.16*dp);
-   float dx=abs(uv.x-orbP.x);
-   col=mix(col,P11,exp(-dx*dx/(cw*cw*2.))*exp(-(HY-uv.y)*22.)*.30*orbUp);
-   if(dx<cw){
-    float row=floor(gl_FragCoord.y/2.);
-    float ts=floor(t*6.);
-    float n=h12(vec2(row*.911,ts));
-    float n2=h12(vec2(row*3.71,ts+17.3));
-    float off=(n-.5)*2.*cw*.85;
-    float dw=2.+9.*n2;
-    float d=abs((uv.x-orbP.x-off)*uRes.x);
-    float on=step(.25,n2);
-    float a=(1.-smoothstep(dw*.4,dw,d))*on*(.85-.55*dp);
-    col=mix(col,P11,a*.9*orbUp);
-   }
-  }
-  /* tap ripples */
-  for(int j=0;j<4;j++){
-   vec4 rp=uRip[j];
-   if(rp.z>0.){
-    float rr=rp.z*.10;
-    float e=abs(length((uv-vec2(rp.x,rp.y))*vec2(asp*2.1,8.5))-rr);
-    float band=exp(-e*e*900.)*max(0.,1.-rp.z/5.)*rp.w;
-    col=mix(col,P11,band*.45);
-   }
-  }
- }
-
- /* fine ordered-dither texture (reference-style screen tone) + slight grain */
- col+=(Bayer4(gl_FragCoord.xy)-.6)*.026+(h12(gl_FragCoord.xy)-.5)*.014;
- return col;
-}
-
-void main(){
- vec2 uv=gl_FragCoord.xy/uRes;
- float t=uTime;
- vec3 col;
- if(uMix>.999){
-  col=scene(uv,uPalB[0],uPalB[1],uPalB[2],uPalB[3],uPalB[4],uPalB[5],uPalB[6],uPalB[7],uPalB[8],uPalB[9],uPalB[10],uPalB[11],uDayF,t);
- }else{
-  /* theme/palette change: smooth crossfade while the bodies ride their arcs */
-  vec3 cA=scene(uv,uPalA[0],uPalA[1],uPalA[2],uPalA[3],uPalA[4],uPalA[5],uPalA[6],uPalA[7],uPalA[8],uPalA[9],uPalA[10],uPalA[11],uDayF,t);
-  vec3 cB=scene(uv,uPalB[0],uPalB[1],uPalB[2],uPalB[3],uPalB[4],uPalB[5],uPalB[6],uPalB[7],uPalB[8],uPalB[9],uPalB[10],uPalB[11],uDayF,t);
-  col=mix(cA,cB,uMix);
- }
- /* intro: a bright drop falls to the water, splash, then a ring of scene expands */
- float p=uIntro;
- if(p<.999){
-  float asp=uRes.x/uRes.y;
-  vec3 dorm=col*.30;
-  dorm+=uPalB[2]*exp(-abs(uv.y-HY)*9.)*.10;
-  float dropEnd=.26;
-  if(p<dropEnd){
-   float e=p/dropEnd;
-   col=mix(vec3(.01,.01,.012),dorm,smoothstep(0.,.55,e));
-   vec2 dp2=vec2(.48,1.04-e*e*(1.04-HY));
-   vec2 dpx=(uv-dp2)*uRes;
-   float head=1.-smoothstep(1.,3.4,length(vec2(dpx.x/1.6,dpx.y/2.6)));
-   float tail=0.;
-   if(dpx.y>0.&&dpx.y<26.){float tt=dpx.y/26.;tail=(1.-tt)*(1.-smoothstep(.3,1.8,abs(dpx.x)- (1.-tt)*1.2));}
-   float glow=exp(-length(dpx)*.10)*.5;
-   float dv=clamp(max(head,tail)+glow,0.,1.)*min(1.,e*5.);
-   col=mix(col,mix(uPalB[11],vec3(1.),.35),dv);
-  }else{
-   float q=clamp((p-dropEnd)/(1.-dropEnd),0.,1.);
-   float qe=1.-pow(1.-q,2.6);
-   vec2 org=vec2(.48,HY);
-   vec2 df=(uv-org)*vec2(asp*.9,1.);
-   float dist=length(df);
-   float ang=atan(df.y,df.x);
-   float maxd=length(vec2(asp*.9,1.))+.1;
-   float wob=sin(ang*6.+q*4.)*.022+sin(ang*13.-q*7.)*.011+(vnoise(uv*14.)-.5)*.05;
-   float front=(.02+qe*maxd)*(1.+wob);
-   float inEdge=1.-smoothstep(front-.03,front+.015,dist);
-   col=mix(dorm,col,inEdge);
-   float crest=exp(-pow((dist-front)*26.,2.))*(1.-smoothstep(.6,.95,q));
-   col=mix(col,uPalB[11],crest*.6);
-   /* splash droplets */
-   float age=q*1.35;
-   if(age<1.){
-    for(int i=0;i<7;i++){
-     float fi=float(i);
-     float vx=(fi/6.-.5)*.14;
-     vec2 pp=org+vec2(vx*age,.10*age-.5*.34*age*age);
-     vec2 dd=(uv-pp)*uRes;
-     float a=max(0.,1.-age)*(1.-smoothstep(.8,1.8,length(dd)));
-     col=mix(col,uPalB[11],a*.8);
-    }
-    /* expanding rings on the water */
-    for(int k=0;k<2;k++){
-     float ek=clamp((age-float(k)*.22)/1.1,0.,1.);
-     if(ek>0.){
-      float rr=.015+.20*(1.-pow(1.-ek,2.2));
-      float e2=abs(length((uv-org)*vec2(asp*1.8,7.))-rr);
-      float a2=exp(-e2*e2*1400.)*(1.-ek);
-      col=mix(col,uPalB[11],a2*.5);
-     }
-    }
-   }
-  }
- }
- gl_FragColor=vec4(col,1.);
-}`;
-const VSH='attribute vec2 aP;void main(){gl_Position=vec4(aP,0.,1.);}';
-
-const canvas=document.querySelector('.pixel-landscape-canvas');
+const cv=document.querySelector('.pixel-landscape-canvas');if(!cv)return;
+cv.style.imageRendering='auto';
+const ctx=cv.getContext('2d');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let gl,prog,U={},pal='nile-silt',mode='dark';
-let palA,palB,mix01=1,dayF=0,intro0=reduce?-1:performance.now();
-let ripples=[],raf=0;
-
-/* ---- reed overlay: dense curved tapered blades, 2D canvas above the GL scene ---- */
-const rcan=document.createElement('canvas');
-rcan.setAttribute('aria-hidden','true');
-rcan.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:-1;display:block;pointer-events:none';
-canvas.after(rcan);
-const rctx=rcan.getContext('2d');
-let blades=[];
-const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
-const ss=(a,b,x)=>{const u=Math.max(0,Math.min(1,(x-a)/(b-a)));return u*u*(3-2*u);};
-const c8=v=>Math.max(0,Math.min(255,Math.round(v*255)));
-const rgb=(v,k)=>`rgb(${c8(v[0]*k)},${c8(v[1]*k)},${c8(v[2]*k)})`;
-function buildBlades(){
- blades=[];const W=innerWidth,H=innerHeight,rnd=mulberry(20261126);
- const layer=(n,h0,h1,w0,w1,l0,l1,bf,heads)=>{
-  for(let i=0;i<n;i++){
-   const xb=(i+.15+rnd()*.7)/n*W;
-   const h=H*(h0+(h1-h0)*Math.pow(rnd(),1.25));
-   const lean=(rnd()<.62?1:-1)*(l0+(l1-l0)*rnd())*h;   /* prevailing wind with variation */
-   blades.push({xb,h,lean,curv:1.15+rnd()*.5,w:w0+(w1-w0)*rnd(),ph:rnd()*6.28,bf:bf*(mode==='dark'?.60:1),head:heads&&rnd()>.62});
-  }};
- layer(Math.round(W/4.5),.03,.09,1.6,2.8,.03,.10,.38,false);
- layer(Math.round(W/5.5),.05,.15,1.1,2.2,.04,.16,.55,false);
- layer(Math.round(W/8),.12,.26,1.8,3.4,.10,.28,.9,false);
- layer(Math.round(W/34),.18,.30,3.0,5.2,.14,.32,1.15,true);
-}
-function drawReeds(now){
- const W=rcan.width,H=rcan.height;
- if(W<4||!blades.length)return;
- let alpha=1;
- if(intro0>=0){const e=(now-intro0)/INTRO_MS;alpha=ss(.35,.85,e);if(alpha<=0)return;}
- const rd=[0,1,2].map(i=>palA[30+i]+(palB[30+i]-palA[30+i])*mix01);
- const t=now/1000,sx=W/innerWidth,sy=H/innerHeight;
- rctx.clearRect(0,0,W,H);
- rctx.globalAlpha=alpha;
- /* dark foliage bank with an irregular top edge */
- rctx.fillStyle=rgb(rd,.16);
- rctx.beginPath();rctx.moveTo(0,H);rctx.lineTo(0,H-8*sy);
- for(let x=0;x<=W;x+=Math.max(6,W/60))rctx.lineTo(x,H-(5+13*Math.abs(Math.sin(x*.043)+Math.sin(x*.011+2.))*.5)*sy);
- rctx.lineTo(W,H);rctx.closePath();rctx.fill();
- for(const b of blades){
-  const sway=Math.sin(t*.85+b.ph)*.012*b.h;
-  const g=rctx.createLinearGradient(0,H,0,H-b.h*sy);
-  g.addColorStop(0,rgb(rd,b.bf*.32));g.addColorStop(1,rgb(rd,b.bf));
-  rctx.fillStyle=g;
-  const N=10,N2=N;
-  rctx.beginPath();
-  for(let s=0;s<=N;s++){const u=s/N;
-   const x=(b.xb+(b.lean+sway)*Math.pow(u,b.curv))*sx,y=H-b.h*u*sy;
-   const w=Math.max(.4,b.w*(1-ss(.45,1,u)*.8))*sx/2;
-   s===0?rctx.moveTo(x-w,y):rctx.lineTo(x-w,y);}
-  for(let s=N2;s>=0;s--){const u=s/N;
-   const x=(b.xb+(b.lean+sway)*Math.pow(u,b.curv))*sx,y=H-b.h*u*sy;
-   const w=Math.max(.4,b.w*(1-ss(.45,1,u)*.8))*sx/2;
-   rctx.lineTo(x+w,y);}
-  rctx.closePath();rctx.fill();
-  if(b.head){
-   const tx=(b.xb+b.lean+sway)*sx,ty=H-b.h*sy;
-   rctx.fillStyle=rgb(rd,b.bf*.8);
-   rctx.beginPath();rctx.ellipse(tx,ty-2*sy,1.5*sx,4.5*sy,Math.atan2(b.lean,b.h),0,6.29);rctx.fill();
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+const css=(c,a)=>a===undefined?`rgb(${c[0]},${c[1]},${c[2]})`:`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let pal='nile-silt',mode='dark',S=SCENES[pal][mode];
+let W=0,H=0,K=1,HY=0,orb={x:0,y:0,r:10},cloudBand=[0,0];
+let blades=[],stars=[],streaks=[],birds=[],clouds=[],cloudSprites=[];
+let veil=null,veilT0=0,veilDur=0,introT0=-1,raf=0,last=0;
+const off=document.createElement('canvas'),octx=off.getContext('2d');
+const snap=document.createElement('canvas'),sctx=snap.getContext('2d');
+function layoutAnchors(){
+  const stacked=W<1200||W/H<0.95;
+  const sy=scrollY;
+  if(H<560&&stacked){
+    orb={x:W-34,y:H*.5,r:Math.max(9,Math.min(16,H*.04))};cloudBand=[H*.01,H*.05];HY=Math.round(H*.84);return;
   }
- }
- rctx.globalAlpha=1;
-}
-
-function packPal(p,m){const s=SCENES[p][m];const out=[];
- out.push(hex(s.sky[0]),mixc(hex(s.sky[1]),hex(s.sky[2]),.5),hex(s.sky[3]));
- out.push(hex(s.water[0]),hex(s.water[1]),hex(s.water[2]));
- out.push(hex(s.cloud[0]),hex(s.cloud[1]),hex(s.cloud[2]));
- out.push(hex(s.orb),hex(s.reed),hex(s.streak));
- return new Float32Array(out.flat());}
-
-
-/* ---- cloud bank sprite: curved 2D paths (union of true ellipses) rendered
-   offscreen once per layout; R channel = lighting (0 shade .. 1 lit), A = mask ---- */
-/* corner bank geometry: smooth inner-edge contour (control pts, cosine-interp),
-   broad connected under-mass, fine varied crust lobes, edge fill offscreen */
-function contourPts(ctl){
- const pts=[];
- for(let i=0;i<ctl.length-1;i++){
-  const a=ctl[i],b=ctl[i+1];
-  for(let k=0;k<8;k++){const t=k/8,u=(1-Math.cos(t*Math.PI))/2;
-   pts.push([a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u]);}
- }
- pts.push(ctl[ctl.length-1].slice());
- return pts;
-}
-function bankPath(side,seed,W,H){
- const R=mulberry(seed);
- /* SOLID filled closed wedge: diagonal inner edge, sky above rounded peak,
-    flat scalloped base, mass extending offscreen. Returns core and crust as
-    SEPARATE paths: the polygon and ellipse subpaths wind oppositely, so one
-    combined nonzero fill carves holes (z5c defect); separate source-over
-    fills union correctly. */
- const diag=side>0
-  ?[[.600,.285],[.650,.258],[.680,.208],[.730,.192],[.765,.138],[.815,.126],[.850,.090],[.900,.084],[.945,.090],[.978,.100]]
-  :[[.280,.250],[.242,.212],[.205,.168],[.170,.146],[.140,.108],[.112,.086],[.090,.058],[.068,.052],[.048,.052]];
- const baseY=side>0?.290:.258;
- /* stepped diagonal: horizontal tread then vertical riser between control
-    points, matching the reference's crisp step silhouette */
- let ctl=diag;
- if(side>0){ /* right tower: horizontal tread then vertical riser, the reference's crisp steps; left bank is a smooth mound in the ref, steps read as ledges there */
-  ctl=[diag[0]];
-  for(let i=1;i<diag.length;i++){ctl.push([diag[i][0],diag[i-1][1]]);ctl.push(diag[i]);}
-  for(let i=1;i<ctl.length-1;i++){ctl[i][0]+=(R()-.5)*.006;ctl[i][1]+=(R()-.5)*.005;}
- }
- const pts=contourPts(ctl);
- const core=new Path2D();
- const off=side>0?1.04:-0.04;
- core.moveTo(diag[0][0]*W,baseY*H);
- for(const[cx,cy]of pts)core.lineTo(cx*W,cy*H);
- core.lineTo(side>0?1.0*W:0,pts[pts.length-1][1]*H);
- core.lineTo(off*W,pts[pts.length-1][1]*H);
- core.lineTo(off*W,baseY*H);
- /* scalloped base: downward arcs along the closing edge (silhouette bumps,
-    part of the core outline, so no per-bump rim) */
- const nb=side>0?8:7;
- for(let k=0;k<nb;k++){
-  const i=side>0?nb-1-k:k; /* arc sweep must follow the base traversal direction, else the self-crossing outline cancels to a slit (z8f artifact) */
-  const bx=side>0?diag[0][0]+(1.0-diag[0][0])*(i+.5)/nb:diag[0][0]*(i+.5)/nb;
-  if(R()<.35)continue; /* gaps: mostly horizontal irregular base, not a uniform row */
-  const r=.013*H*(0.45+1.5*R());
-  if(side>0)core.ellipse(bx*W,(baseY+(R()-.5)*.010)*H,r,r*.5,0,0,Math.PI);
-  else core.ellipse(bx*W,(baseY+(R()-.5)*.010)*H,r,r*.5,0,Math.PI,0,true);
- }
- core.lineTo(diag[0][0]*W,baseY*H);
- core.closePath();
- /* broad irregular stepped bulges straddling the diagonal: every 2nd
-    interpolated point, wide size variation, some skipped */
- const crust=new Path2D();
- for(let i=0;i<pts.length;i+=2){
-  if(R()<(side>0?.22:.30))continue;
-  const[cx,cy]=pts[i];
-  let r=(side>0?.020:.011)*H*(0.60+0.9*R());
-  if(R()<.12)r*=1.5;
-  r=Math.min(r,Math.max(4,cy*H-(side>0?.080:.030)*H)); /* keep peaks at measured ref extents (.09H right, .035H left) */
-  const jx=(R()-.5)*.012*W,jy=(R()-.5)*.006*H;
-  const rx=r,ry=side>0?r*.9:r*.85;
-  crust.moveTo(cx*W+jx+rx,cy*H+jy);
-  crust.ellipse(cx*W+jx,cy*H+jy,rx,ry,0,0,7);
- }
- return {core,crust,pts,side};
-}
-
-function genCloudSprite(W,H){
- const c2=document.createElement('canvas');c2.width=Math.max(2,W);c2.height=Math.max(2,H);
- const x2=c2.getContext('2d');
- const bR=bankPath(1,7,c2.width,c2.height),bL=bankPath(-1,21,c2.width,c2.height);
- const rim=Math.max(2,Math.round(c2.height*.004));
- x2.fillStyle='rgb(205,205,205)';
- for(const b of[bR,bL]){x2.fill(b.core);x2.fill(b.crust);}
- x2.globalCompositeOperation='source-atop';
- x2.save();x2.translate(0,rim);x2.fillStyle='rgb(130,130,130)';
- for(const b of[bR,bL]){x2.fill(b.core);x2.fill(b.crust);}
- x2.restore();
- /* per-tier shading: bright band hugging the sky side of the contour,
-    darker patch just inside, elongated along the tangent - matches the
-    reference's per-step highlights without ball-per-lobe shading */
- for(const b of[bR,bL]){
-  const pts=b.pts,Rt=mulberry(b.side>0?55:77);
-  for(let i=2;i<pts.length-2;i+=5){
-   if(Rt()<.2)continue;
-   const[cx,cy]=pts[i],[dx2,dy2]=[pts[i+1][0]-pts[i-1][0],pts[i+1][1]-pts[i-1][1]];
-   const L=Math.hypot(dx2,dy2)||1,nx=dy2/L,ny=-dx2/L,ang=Math.atan2(dy2,dx2);
-   const px=cx*c2.width,py=cy*c2.height;
-   const rb=(.036+.024*Rt())*c2.height;
-   x2.save();x2.translate(px+nx*.019*c2.height,py+ny*.019*c2.height);x2.rotate(ang);x2.scale(1.9,1);
-   let g=x2.createRadialGradient(0,0,rb*.15,0,0,rb);
-   g.addColorStop(0,`rgba(255,246,224,${.40+.10*Rt()})`);g.addColorStop(1,'rgba(0,0,0,0)');
-   x2.fillStyle=g;x2.fillRect(-rb,-rb,rb*2,rb*2);x2.restore();
-   const rs=(.040+.030*Rt())*c2.height;
-   x2.save();x2.translate(px-nx*.034*c2.height,py-ny*.034*c2.height);x2.rotate(ang);x2.scale(1.9,1);
-   g=x2.createRadialGradient(0,0,rs*.2,0,0,rs);
-   g.addColorStop(0,`rgba(40,28,14,${.10+.07*Rt()})`);g.addColorStop(1,'rgba(0,0,0,0)');
-   x2.fillStyle=g;x2.fillRect(-rs,-rs,rs*2,rs*2);x2.restore();
+  if(stacked){
+    const ic=document.querySelector('.icons'),tb=document.querySelector('.tabs'),dock=document.querySelector('.dock');
+    let top=H*.2,bot=H*.55;
+    if(ic&&tb){const a=ic.getBoundingClientRect(),b=tb.getBoundingClientRect();
+      if(b.top>a.bottom){top=a.bottom+sy;bot=b.top+sy;}}
+    if(bot>H)bot=H*.7;
+    const gap=Math.max(40,bot-top);
+    orb={x:W*.5,y:top+gap*.5,r:Math.max(10,Math.min(W*.075,gap*.32,34))};
+    cloudBand=[top+gap*.12,bot-gap*.12];
+  }else{
+    orb={x:W*(mode==='light'?.62:.5),y:H*.15,r:Math.max(14,Math.min(30,H*.035))};
+    cloudBand=[H*.04,H*.17];
   }
- }
- /* broad soft volume: muted darker low/interior patches + faint top lift,
-    breaking the flat face (radial gradients, source-atop = mass only) */
- const blob=(cx,cy,r,dark,a)=>{
-  const g=x2.createRadialGradient(cx,cy,r*.1,cx,cy,r);
-  g.addColorStop(0,dark?`rgba(30,20,10,${a})`:`rgba(255,250,235,${a})`);
-  g.addColorStop(1,'rgba(0,0,0,0)');
-  x2.fillStyle=g;x2.fillRect(cx-r,cy-r,r*2,r*2);
- };
- const W2=c2.width,H2=c2.height;
- blob(.76*W2,.24*H2,.135*H2,true,.26);
- blob(.84*W2,.20*H2,.10*H2,true,.16);
- blob(.95*W2,.19*H2,.10*H2,true,.16);
- blob(.70*W2,.155*H2,.06*H2,true,.12);
- blob(.86*W2,.11*H2,.07*H2,false,.12);
- blob(.92*W2,.245*H2,.07*H2,true,.18);
- blob(.66*W2,.27*H2,.05*H2,true,.12);
- blob(.12*W2,.20*H2,.11*H2,true,.20);
- blob(.22*W2,.23*H2,.07*H2,true,.11);
- blob(.05*W2,.13*H2,.06*H2,true,.12);
- blob(.09*W2,.065*H2,.06*H2,false,.12);
- /* granular dithered highlights/shadows: deterministic 1-3px speckle in the
-    luminance channel, denser toward the top of the masses */
- const R3=mulberry(91);
- for(let i=0;i<5200;i++){
-  const sx=R3()*W2,sy=R3()*H2*.34;
-  const top=1-sy/(.34*H2);
-  if(R3()>.25+top*.6)continue;
-  const s=R3()<.85?1:(2+R3()*2)|0;
-  const hi=R3()<.5;
-  x2.fillStyle=hi?`rgba(255,246,225,${.05+R3()*.07})`:`rgba(35,25,12,${.06+R3()*.08})`;
-  x2.fillRect(sx,sy,s,s);
- }
- const vg=x2.createLinearGradient(0,c2.height*.1,0,c2.height*.7);
- vg.addColorStop(0,'rgba(255,255,255,.10)');vg.addColorStop(1,'rgba(0,0,0,.14)');
- x2.fillStyle=vg;x2.fillRect(0,0,c2.width,c2.height);
- /* posterize luminance into flat patches with ordered-dither transitions and
-    dithered crisp edges - the reference's indexed-color/granular look */
- {
-  const B=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
-  const id=x2.getImageData(0,0,c2.width,c2.height),d=id.data;
-  const step=24,w4=c2.width;
-  for(let y=0;y<c2.height;y++)for(let x=0;x<w4;x++){
-   const i=(y*w4+x)*4,bt=(B[(y&3)*4+(x&3)]+.5)/16;
-   let v=d[i]+(bt-.5)*step;
-   v=Math.max(72,Math.min(216,Math.round(v/step)*step));
-   d[i]=d[i+1]=d[i+2]=v;
-   d[i+3]=d[i+3]>bt*255?255:0;
-  }
-  x2.putImageData(id,0,0);
- }
- return c2;
-}
-let cloudTex=null;
-function uploadCloudSprite(){
- const spr=genCloudSprite(canvas.width,canvas.height);
- if(!cloudTex)cloudTex=gl.createTexture();
- gl.bindTexture(gl.TEXTURE_2D,cloudTex);
- gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
- gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,spr);
- gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
- gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
- gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
- gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  HY=Math.round(Math.min(H*.8,Math.max(H*.64,(stacked?cloudBand[1]+18:0))));
 }
 
-function initGL(){
- gl=canvas.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:false});
- if(!gl){window.__glerr='no-webgl';fallback2d();return false;}
- const sh=(t,src)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
-  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){window.__glerr=gl.getShaderInfoLog(s);return null;}return s;};
- const vs=sh(gl.VERTEX_SHADER,VSH),fs=sh(gl.FRAGMENT_SHADER,FRAG);
- if(!vs||!fs)return false;
- prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);
- if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){window.__glerr=gl.getProgramInfoLog(prog);return false;}
- gl.useProgram(prog);
- const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
- gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
- const loc=gl.getAttribLocation(prog,'aP');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
- for(const n of ['uRes','uTime','uIntro','uMix','uDayF','uPalA','uPalB','uRip','uCloudTex'])U[n]=gl.getUniformLocation(prog,n);
- gl.uniform1i(U.uCloudTex,0);
- return true;
+function build(){
+  W=innerWidth;H=innerHeight;K=Math.min(devicePixelRatio||1,1.5);
+  for(const c of [cv,off,snap]){c.width=Math.round(W*K);c.height=Math.round(H*K)}
+  layoutAnchors();
+  const R=rng(20261126);
+  /* static sky and water: smooth gradients */
+  octx.setTransform(K,0,0,K,0,0);
+  const sk=S.sky.map(hex),wt=S.water.map(hex);
+  let g=octx.createLinearGradient(0,0,0,HY);
+  sk.forEach((c,i)=>g.addColorStop(i/(sk.length-1),css(c)));
+  octx.fillStyle=g;octx.fillRect(0,0,W,HY+1);
+  g=octx.createLinearGradient(0,HY,0,H);
+  wt.forEach((c,i)=>g.addColorStop(wt.length>1?i/(wt.length-1):0,css(c)));
+  octx.fillStyle=g;octx.fillRect(0,HY,W,H-HY);
+  /* soft glow around the orb, baked into the sky */
+  const orbC=hex(S.orb);
+  g=octx.createRadialGradient(orb.x,orb.y,0,orb.x,orb.y,orb.r*6);
+  g.addColorStop(0,css(orbC,mode==='light'?.38:.16));g.addColorStop(.35,css(orbC,mode==='light'?.14:.06));g.addColorStop(1,css(orbC,0));
+  octx.save();octx.beginPath();octx.rect(0,0,W,HY);octx.clip();octx.fillStyle=g;octx.fillRect(orb.x-orb.r*6,orb.y-orb.r*6,orb.r*12,orb.r*12);octx.restore();
+  /* horizon haze */
+  g=octx.createLinearGradient(0,HY-H*.07,0,HY);
+  const hz=hex(S.streak);g.addColorStop(0,css(hz,0));g.addColorStop(1,css(hz,mode==='light'?.22:.07));
+  octx.fillStyle=g;octx.fillRect(0,HY-H*.07,W,H*.07);
+  stars=[];const ns=Math.round(W*HY/9000);
+  for(let i=0;i<ns;i++)stars.push({x:R()*W,y:R()*HY*.85,r:.5+R()*.9,p:R()*6.28,s:.3+R()*.5,sp:R()<.07});
+  birds=[];for(let i=0;i<4;i++)birds.push({x:R()*W,y:cloudBand[0]*(.2+R()*.6)+8,v:9+R()*8,p:R()*6});
+  cloudSprites=[];clouds=[];
+  const nc=W<700?2:3;
+  for(let i=0;i<nc;i++){
+    const cw=W<700?W*(.4+R()*.2):W*(.1+R()*.07),ch=Math.max(26,cw*(.28+R()*.08));
+    cloudSprites.push(makeCloud(cw,ch,R));
+    const band=cloudBand[1]-cloudBand[0];
+    clouds.push({i,x:R()*W,y:cloudBand[0]+band*(i/(nc-.4))+(R()-.5)*8,v:6+R()*9});
+  }
+  streaks=[];const ns2=Math.round(W/22);
+  for(let i=0;i<ns2;i++){
+    const near=R()<.55;const cx=near?orb.x+(R()-.5)*W*.22:R()*W;
+    streaks.push({x:cx,y:HY+4+Math.pow(R(),1.5)*(H-HY)*.55,w:14+R()*(near?70:36),p:R()*6.28,v:(R()-.5)*8,a:near?.5:.26});
+  }
+  blades=[];const nb=Math.round(Math.min(380,W*.42));
+  for(let i=0;i<nb;i++){
+    const layer=i%3,x=R()*W;
+    const hmax=Math.min(H*(H<560?.1:.3),(W<700?150:260)*(layer===0?.55:layer===1?.8:1.05));
+    blades.push({x,h:hmax*(.45+R()*.55),layer,p:R()*6.28,lean:(R()-.5)*8,seed:R()<.2,w:.9+layer*.35});
+  }
+  blades.sort((a,b)=>a.layer-b.layer);
 }
-function fallback2d(){const c=canvas.getContext('2d');const g=c.createLinearGradient(0,0,0,canvas.height);
- const s=SCENES[pal][mode];g.addColorStop(0,s.sky[0]);g.addColorStop(.6,s.sky[3]);g.addColorStop(.63,s.water[0]);g.addColorStop(1,s.water[2]);
- c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);
- drawReeds(performance.now());}
-let qual=1,lastW=0,lastH=0;
-function size(){
- const dpr=Math.min(devicePixelRatio||1,2);
- let w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);
- lastW=innerWidth;lastH=innerHeight;
- const cap=(innerWidth/innerHeight<.9)?2400000:1600000,scale=Math.min(1,Math.sqrt(cap/(w*h)))*qual;
- canvas.width=Math.max(2,Math.round(w*scale));canvas.height=Math.max(2,Math.round(h*scale));
- rcan.width=canvas.width;rcan.height=canvas.height;
- buildBlades();
- if(gl){gl.viewport(0,0,canvas.width,canvas.height);uploadCloudSprite();}}
+function makeCloud(w,h,R){
+  const m=h*.5,c=document.createElement('canvas');c.width=Math.ceil((w+2*m)*K);c.height=Math.ceil((h+2*m)*K);c._m=m;
+  const g=c.getContext('2d');g.setTransform(K,0,0,K,m*K,m*K);
+  const cl=S.cloud.map(hex);
+  const n=7+Math.floor(R()*3),puffs=[];
+  for(let i=0;i<n;i++){const t=(i+.5)/n,bump=Math.sin(t*Math.PI);
+    puffs.push({x:w*(.1+.8*t),y:h*(.66-.34*bump*(.55+R()*.45)),r:h*(.26+.2*bump*(.5+R()*.5))});}
+  /* body: dark base, then mid, then light tops, all with soft radial edges */
+  const layers=[[cl[0],0,.8],[cl[1],-.18,.7],[cl[2],-.34,.5]];
+  for(const [col,dy,sc] of layers){
+    for(const p of puffs){
+      const r=p.r*(.8+sc*.35),cy=p.y+dy*p.r;
+      const rg=g.createRadialGradient(p.x,cy,0,p.x,cy,r);
+      rg.addColorStop(0,css(col,.97));rg.addColorStop(.72,css(col,.9));rg.addColorStop(1,css(col,0));
+      g.fillStyle=rg;g.fillRect(p.x-r,cy-r,r*2,r*2);
+    }
+  }
+  /* soft flat underside */
+  g.globalCompositeOperation='destination-out';
+  const fg=g.createLinearGradient(0,h*.72,0,h*.84);fg.addColorStop(0,'rgba(0,0,0,0)');fg.addColorStop(1,'rgba(0,0,0,1)');
+  g.fillStyle=fg;g.fillRect(-m,h*.72,w+2*m,h);
+  return c;
+}
 function frame(now){
- const t=now/1000;
- gl.uniform2f(U.uRes,canvas.width,canvas.height);
- gl.uniform1f(U.uTime,t%3600);
- gl.uniform1f(U.uIntro,intro0<0?1:Math.min(1,(now-intro0)/INTRO_MS));
- gl.uniform1f(U.uMix,mix01);
- gl.uniform1f(U.uDayF,dayF);
- gl.uniform3fv(U.uPalA,palA);gl.uniform3fv(U.uPalB,palB);
- const rp=new Float32Array(16);
- ripples=ripples.filter(r=>now-r.t0<5000);
- ripples.slice(0,4).forEach((r,i)=>{rp[i*4]=r.x;rp[i*4+1]=r.y;rp[i*4+2]=(now-r.t0)/1000;rp[i*4+3]=r.s;});
- gl.uniform4fv(U.uRip,rp);
- gl.drawArrays(gl.TRIANGLES,0,3);
+  const t=now/1000,day=mode==='light';
+  ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(off,0,0);
+  ctx.setTransform(K,0,0,K,0,0);
+  const orbC=hex(S.orb),streakC=hex(S.streak),reedC=hex(S.reed);
+  if(!day){
+    for(const s of stars){const a=.3+.7*(.5+.5*Math.sin(t*s.s+s.p));
+      ctx.fillStyle=`rgba(243,237,228,${(a*.9).toFixed(2)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
+      if(s.sp&&a>.6){ctx.strokeStyle=`rgba(243,237,228,${(a*.6).toFixed(2)})`;ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(s.x-4,s.y);ctx.lineTo(s.x+4,s.y);ctx.moveTo(s.x,s.y-4);ctx.lineTo(s.x,s.y+4);ctx.stroke()}}
+  }else{
+    ctx.strokeStyle='rgba(70,64,70,.55)';ctx.lineWidth=1.3;ctx.lineCap='round';
+    for(const b of birds){const x=(((b.x-t*b.v)%(W+40))+W+40)%(W+40)-20,y=b.y+Math.sin(t+b.p)*3,f=Math.sin(t*3+b.p)*2.2;
+      ctx.beginPath();ctx.moveTo(x-6,y-f);ctx.quadraticCurveTo(x-3,y-3-f,x,y);ctx.quadraticCurveTo(x+3,y-3-f,x+6,y-f);ctx.stroke()}
+  }
+  /* clouds (behind the orb disc) */
+  for(const c of clouds){const sp=cloudSprites[c.i],m=sp._m,w=sp.width/K,span=W+w;
+    const x=((c.x-t*c.v)%span+span)%span-w;
+    ctx.drawImage(sp,x-m,c.y-m,w,sp.height/K)}
+  /* orb */
+  const r=orb.r;
+  if(day){
+    const rg=ctx.createRadialGradient(orb.x-r*.25,orb.y-r*.25,0,orb.x,orb.y,r);
+    rg.addColorStop(0,css(mix(orbC,[255,255,255],.55)));rg.addColorStop(.7,css(orbC));rg.addColorStop(1,css(mix(orbC,[255,150,60],.25)));
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(orb.x,orb.y,r,0,6.283);ctx.fill();
+  }else{
+    ctx.save();ctx.beginPath();ctx.arc(orb.x,orb.y,r,0,6.283);ctx.clip();
+    ctx.beginPath();ctx.rect(orb.x-r*2,orb.y-r*2,r*4,r*4);ctx.arc(orb.x+r*.5,orb.y-r*.2,r*.92,0,6.283);
+    const rg=ctx.createLinearGradient(orb.x-r,orb.y,orb.x+r*.4,orb.y);rg.addColorStop(0,css(orbC));rg.addColorStop(1,css(mix(orbC,[200,190,170],.4)));
+    ctx.fillStyle=rg;ctx.fill('evenodd');ctx.restore();
+  }
+  /* water streaks */
+  const sc=day?[255,243,207]:streakC;
+  ctx.lineCap='round';ctx.lineWidth=1.4;
+  for(const s of streaks){const a=s.a*(.5+.5*Math.sin(t*1.3+s.p));
+    const x=s.x+Math.sin(t*.4+s.p)*s.v*3-s.w/2;
+    const lg=ctx.createLinearGradient(x,0,x+s.w,0);lg.addColorStop(0,css(sc,0));lg.addColorStop(.5,css(sc,a.toFixed(2)));lg.addColorStop(1,css(sc,0));
+    ctx.fillStyle=lg;ctx.fillRect(x,s.y,s.w,1.4)}
+  /* horizon line */
+  ctx.fillStyle=css(sc,.2);ctx.fillRect(0,HY,W,1);
+  /* reeds: anti-aliased curved strokes */
+  ctx.lineCap='round';
+  for(const b of blades){
+    const dark=b.layer===0?.55:b.layer===1?.78:1;
+    const base=mix([0,0,0],reedC,dark);
+    const sw=Math.sin(t*.8+b.x*.02+b.p)*10+b.lean*3;
+    const x0=b.x,y0=H+4,x1=b.x+sw,y1=H-b.h;
+    const cx=b.x+sw*.15+b.lean,cy=H-b.h*.55;
+    const lg=ctx.createLinearGradient(0,H,0,y1);
+    lg.addColorStop(0,css([8,6,4]));lg.addColorStop(.18,css(mix([8,6,4],base,.55)));lg.addColorStop(1,css(base));
+    ctx.strokeStyle=lg;ctx.lineWidth=b.w;
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo(cx,cy,x1,y1);ctx.stroke();
+    if(b.seed){ctx.fillStyle=css(mix([30,20,8],reedC,.9));ctx.beginPath();ctx.ellipse(x1,y1-3,1.6,5,sw*.01,0,6.283);ctx.fill()}
+  }
+  /* theme / intro veil */
+  ctx.setTransform(1,0,0,1,0,0);
+  if(introT0>=0){const a=1-Math.min(1,(now-introT0)/1200);if(a>0){ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.fillRect(0,0,cv.width,cv.height)}else introT0=-1}
+  if(veil){const a=1-Math.min(1,(now-veilT0)/veilDur);if(a>0){ctx.globalAlpha=a;ctx.drawImage(snap,0,0);ctx.globalAlpha=1}else veil=null}
 }
-/* smooth scrolling: draw at most ~30 fps (the scene is slow dithered pixel art), and
-   lower the render resolution step by step if frames still take too long */
-let lastDraw=0,slow=0,lastTick=0;
-function loop(now){
- if(!reduce)raf=requestAnimationFrame(loop);
- if(now-lastDraw<29)return;
- const dt=now-lastTick;lastTick=now;lastDraw=now;
- /* dt well above the 33 ms target means the device cannot keep up */
- if(dt>45&&dt<400&&(intro0<0||now-intro0>INTRO_MS+300)){if(++slow>=12&&qual>.45){qual=Math.max(.45,qual*.82);slow=0;size();}}
- else if(slow>0)slow--;
- frame(now);drawReeds(now);
-}
-
-palA=packPal(pal,mode);palB=palA;
-function start(){
- size();
- if(!gl&&!initGL())return;
- size();
- if(reduce){frame(performance.now());drawReeds(performance.now());return;}
- cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
-}
+function loop(now){raf=requestAnimationFrame(loop);if(now-last<33)return;last=now;frame(now)}
+function start(){cancelAnimationFrame(raf);build();if(reduce){frame(performance.now());return}raf=requestAnimationFrame(loop)}
 window.landscape={
- set(p,m){
-  if(p===pal&&m===mode)return;
-  intro0=-1;  /* a theme/palette click during the intro skips it, so background and UI transitions start together at full brightness */
-  const themeCh=m!==mode;
-  palA=new Float32Array(palB);
-  pal=p;mode=m;palB=packPal(p,m);
-  buildBlades();
-  mix01=0;
-  const day0=dayF,day1=m==='light'?1:0;
-  const t0=performance.now(),dur=themeCh?TRANS_MS:400;
-  const step=n=>{const e=Math.min(1,(n-t0)/dur);
-   mix01=e;dayF=day0+(day1-day0)*e;
-   if(e<1&&!reduce)requestAnimationFrame(step);};
-  if(!reduce)requestAnimationFrame(step);else{mix01=1;dayF=day1;drawReeds(performance.now());}
-  const cls=themeCh?'theme-sync':'palette-sync';document.body.classList.add(cls);
-  setTimeout(()=>document.body.classList.remove(cls),themeCh?950:450);
- },
- intro(){intro0=reduce?-1:performance.now();}
+  set(p,m){
+    if(p===pal&&m===mode)return;
+    if(!reduce&&W){sctx.setTransform(1,0,0,1,0,0);sctx.clearRect(0,0,snap.width,snap.height);sctx.drawImage(cv,0,0);veil=true;veilT0=performance.now();veilDur=700}
+    pal=p;mode=m;S=SCENES[pal][mode];start();
+  },
+  intro(){if(!reduce)introT0=performance.now()},
+  relayout(){const a=orb.x+','+orb.y;layoutAnchors();if(orb.x+','+orb.y!==a)start()}
 };
-addEventListener('pointerdown',e=>{
- const y=1-e.clientY/innerHeight;
- if(y<.365)ripples.push({x:e.clientX/innerWidth,y,t0:performance.now(),s:.8});
-});
-/* mobile address-bar show/hide while scrolling fires a resize with the same width:
-   ignore it, the fixed canvas just stretches by a few pixels */
-let rt;addEventListener('resize',()=>{
- if(innerWidth===lastW&&Math.abs(innerHeight-lastH)<200)return;
- clearTimeout(rt);rt=setTimeout(start,150)});
-document.addEventListener('visibilitychange',()=>{if(reduce)return;
- if(document.hidden)cancelAnimationFrame(raf);else raf=requestAnimationFrame(loop)});
+let rt,lw=innerWidth,lh=innerHeight;
+addEventListener('resize',()=>{if(innerWidth===lw&&Math.abs(innerHeight-lh)<200)return;lw=innerWidth;lh=innerHeight;clearTimeout(rt);rt=setTimeout(start,150)});
+document.addEventListener('visibilitychange',()=>{if(reduce)return;if(document.hidden)cancelAnimationFrame(raf);else raf=requestAnimationFrame(loop)});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>setTimeout(()=>window.landscape.relayout(),50));
+addEventListener('load',()=>setTimeout(()=>window.landscape.relayout(),200));
 start();
 })();
