@@ -10,11 +10,11 @@ const ICON={
  ud:'<svg viewBox="0 0 24 24"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>'
 };
 const LINKS=[
- ['LinkedIn','https://www.linkedin.com/in/mohamed-ezz-45825a390','li'],
- ['GitHub','https://github.com/mohamedezzmnu','gh'],
- ['Kaggle','https://www.kaggle.com/mohamedezzf','kg'],
+ ['Email','mailto:'+EMAIL,'mail'],
  ['X','https://x.com/ezz1611','x'],
- ['Email','mailto:'+EMAIL,'mail']
+ ['Kaggle','https://www.kaggle.com/mohamedezzf','kg'],
+ ['GitHub','https://github.com/mohamedezzmnu','gh'],
+ ['LinkedIn','https://www.linkedin.com/in/mohamed-ezz-45825a390','li']
 ];
 const TC={nextjs:'#d6d6d6',supabase:'#3ecf8e',python:'#5aa0e0',pandas:'#a68af0',matplotlib:'#e8914f',seaborn:'#4fb0c4',api:'#9aa3b2',lr:'#e0b84f'};
 const T={
@@ -99,7 +99,7 @@ const hint=()=>`<span class="hint">${ICON.ud}${T[lang].scroll}</span>`;
 
 function applyTheme(){
   root.dataset.palette=pal;root.dataset.theme=theme;
-  $('#themeBtn').innerHTML=theme==='dark'?ICON.moon:ICON.sun;
+  $('#themeBtn').innerHTML=theme==='dark'?ICON.sun:ICON.moon;
   window.landscape&&window.landscape.set(pal,theme);
 }
 function applyLang(){
@@ -120,7 +120,7 @@ function detailExp(i){const e=T[lang].exp[i];return `<div class="detail"><div cl
 function detailProj(i){const p=T[lang].proj[i];return `<div class="detail"><div class="dbody"><div class="dhead"><h2>${esc(p.t)}</h2><span style="display:flex;gap:6px"><a class="sbtn a" href="${p.gh}" target="_blank" rel="noopener">github ↗</a><a class="sbtn" href="${p.live}" target="_blank" rel="noopener">live ↗</a></span></div><p class="role">${esc(p.role)}</p><p class="desc">${esc(p.d)}</p><ul class="bul">${p.b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="foot"><div class="chips">${p.chips.map(c=>chip(c[0],c[1])).join('')}</div></div></div>`}
 function split(k){
   const t=T[lang],arr=t[k],i=sel[k];
-  const list=arr.map((x,n)=>`<button class="item" role="option" data-i="${n}" aria-selected="${n===i}" tabindex="${n===i?0:-1}"><span class="n">0${n+1}</span><span><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></span></button>`).join('');
+  const list=arr.map((x,n)=>`<button class="item" role="option" data-i="${n}" aria-selected="${n===i}" tabindex="${n===i?0:-1}"><span class="n">0${n+1}</span><span class="txt"><b>${esc(x.t)}</b><small>${esc(x.sub)}</small></span></button>`).join('');
   return `<div class="view split"><div class="list" role="listbox">${list}</div><div id="detail">${k==='exp'?detailExp(i):detailProj(i)}</div></div>`;
 }
 function viewFor(k){
@@ -190,7 +190,7 @@ $('#copyBtn').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(EMAIL)}catch(x){const t=document.createElement('textarea');t.value=EMAIL;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(y){}t.remove()}
   b.textContent=T[lang].copied;setTimeout(()=>{b.textContent=T[lang].copy},1500);
 });
-$('#icons').innerHTML=LINKS.map((l,i)=>`<a class="ibtn${i===LINKS.length-1?' tint':''}" href="${l[1]}" ${l[1].startsWith('http')?'target="_blank" rel="noopener"':''} data-tip="${l[0].toLowerCase()}" aria-label="${l[0]}">${ICON[l[2]]}</a>`).join('');
+$('#icons').innerHTML=LINKS.map((l,i)=>`<a class="ibtn${i===0?' tint':''}" href="${l[1]}" ${l[1].startsWith('http')?'target="_blank" rel="noopener"':''} data-tip="${l[0].toLowerCase()}" aria-label="${l[0]}">${ICON[l[2]]}</a>`).join('');
 function enterAnim(){
   root.classList.remove('enter');void root.offsetWidth;root.classList.add('enter');
   if(window.landscape&&window.landscape.intro)window.landscape.intro();
