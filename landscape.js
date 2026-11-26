@@ -75,6 +75,21 @@ vec4 cloud(vec2 uv,vec2 c,vec2 r,float seed,vec3 c0,vec3 c1,vec3 c2,float t,int 
  return vec4(cc,body);
 }
 
+float sdens(vec2 p,float seed,float t){
+ float e=length(p*vec2(1.,1.9));
+ float n=fbm(p*vec2(2.6,3.4)+seed+vec2(t*.012,0.));
+ return smoothstep(1.,.25,e+(n-.5)*1.05);
+}
+vec4 softCloud(vec2 uv,vec2 c,vec2 r,float seed,vec3 c0,vec3 c1,vec3 c2,float t){
+ vec2 p=(uv-c)/r;
+ if(abs(p.x)>1.6||abs(p.y)>1.6)return vec4(0.);
+ float d=sdens(p,seed,t);
+ if(d<=.01)return vec4(0.);
+ float up=sdens(p+vec2(.03,.2),seed,t);
+ float lit=clamp(.42+(d-up)*2.4+(1.-length(p))*.12,0.,1.);
+ vec3 cc=lit<.5?mix(c0,c1,lit*2.):mix(c1,c2,(lit-.5)*2.);
+ return vec4(cc,smoothstep(.02,.55,d)*.88);
+}
 /* one grass blade SDF helper (unused by scene; reeds render on the 2D overlay) */
 
 vec3 scene(vec2 uv,vec3 P0,vec3 P1,vec3 P2,vec3 P3,vec3 P4,vec3 P5,vec3 P6,vec3 P7,vec3 P8,vec3 P9,vec3 P10,vec3 P11,float dayF,float t){
@@ -84,6 +99,7 @@ vec3 scene(vec2 uv,vec3 P0,vec3 P1,vec3 P2,vec3 P3,vec3 P4,vec3 P5,vec3 P6,vec3 
  float sunY=mix(-.18,.80,smoothstep(.05,.95,dayF));
  float moonY=mix(.80,-.18,smoothstep(.05,.95,dayF));
  vec2 sunP=vec2(.62,sunY),moonP=vec2(.24,moonY);
+ if(asp<.9){sunP=vec2(.5,mix(-.18,.5,smoothstep(.05,.95,dayF)));moonP=vec2(.5,mix(.5,-.18,smoothstep(.05,.95,dayF)));} /* phones: keep the orb in the top-right corner, clear of the text and icons */
  float sunUp=clamp(dayF*1.6-.3,0.,1.),moonUp=clamp((1.-dayF)*1.6-.3,0.,1.);
  vec2 orbP=dayF>.5?sunP:moonP;
  float orbUp=max(sunUp,moonUp);
@@ -117,6 +133,8 @@ vec3 scene(vec2 uv,vec3 P0,vec3 P1,vec3 P2,vec3 P3,vec3 P4,vec3 P5,vec3 P6,vec3 
      true ellipses, per-lobe top-lit shading in luminance), tinted by palette */
   vec2 cuv=vec2(clamp(uv.x+sin(t*.02)*.008,0.,1.),uv.y);
   vec4 cs=texture2D(uCloudTex,cuv);
+  float por=1.-smoothstep(.8,.95,asp);
+  cs.a*=0.;
   if(cs.a>.003){
    float lit=cs.r;
    /* multi-anchor bank tint: derived shadow/highlight anchors extend the
@@ -139,8 +157,15 @@ vec3 scene(vec2 uv,vec3 P0,vec3 P1,vec3 P2,vec3 P3,vec3 P4,vec3 P5,vec3 P6,vec3 
    col=mix(col,cc,cs.a);
   }
   vec4 cl;
-  cl=cloud(uv,vec2(.33,.66),vec2(.11,.055*casp),12.2,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.9);
-  cl=cloud(uv,vec2(.58,.60),vec2(.08,.045*casp),15.8,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.85);
+  cl=cloud(uv,mix(vec2(.33,.66),vec2(.14,.485),por),mix(vec2(.11,.055*casp),vec2(.13,.03*casp),por),12.2,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.9*0.);
+  cl=cloud(uv,mix(vec2(.58,.60),vec2(.88,.50),por),mix(vec2(.08,.045*casp),vec2(.12,.028*casp),por),15.8,P6,P7,P8,t,1);col=mix(col,cl.rgb,cl.a*.85*0.);
+  {
+   vec2 a1=mix(vec2(.14,.90),vec2(.16,.50),por),a2=mix(vec2(.80,.84),vec2(.86,.455),por),a3=mix(vec2(.46,.93),vec2(.60,.57),por);
+   vec2 r1=mix(vec2(.11,.085),vec2(.17,.030*casp),por),r2=mix(vec2(.14,.095),vec2(.20,.034*casp),por),r3=mix(vec2(.08,.06),vec2(.13,.020*casp),por);
+   cl=softCloud(uv,a1,r1,3.1,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a);
+   cl=softCloud(uv,a2,r2,8.7,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a);
+   cl=softCloud(uv,a3,r3,5.3,P6,P7,P8,t);col=mix(col,cl.rgb,cl.a*.7);
+  }
   /* birds by day */
   if(dayF>.02){
    for(int i=0;i<3;i++){
@@ -561,7 +586,7 @@ function size(){
  const dpr=Math.min(devicePixelRatio||1,2);
  let w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);
  lastW=innerWidth;lastH=innerHeight;
- const cap=1600000,scale=Math.min(1,Math.sqrt(cap/(w*h)))*qual;
+ const cap=(innerWidth/innerHeight<.9)?2400000:1600000,scale=Math.min(1,Math.sqrt(cap/(w*h)))*qual;
  canvas.width=Math.max(2,Math.round(w*scale));canvas.height=Math.max(2,Math.round(h*scale));
  rcan.width=canvas.width;rcan.height=canvas.height;
  buildBlades();
