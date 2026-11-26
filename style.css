@@ -149,9 +149,9 @@ h1{font-size:23px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
 .dlg{position:relative;width:100%;max-width:780px;max-height:calc(100vh - 72px);overflow:auto;border-radius:16px;background:var(--panel-solid);border:1px solid var(--line);padding:26px 28px;animation:up .25s both}
 .dlg .x{position:sticky;top:0;float:inline-end;width:32px;height:32px;margin-inline-start:8px;border-radius:9px;display:grid;place-items:center;font-size:17px;color:var(--muted);border:1px solid var(--line);background:var(--panel-solid);transition:background .14s,color .14s;z-index:2}
 .dlg .x:hover{color:var(--ink);background:var(--surface-hover)}
-@media (max-width:1023px){.dlg{max-height:calc(100vh - 40px);padding:20px 18px}}
+@media (max-width:1199px){.dlg{max-height:calc(100vh - 40px);padding:20px 18px}}
 
-@media (max-width:1023px){
+@media (max-width:1199px){
   body{overflow:auto}
   .stage{display:block;padding:72px 16px 64px;min-height:0}
   .grid{display:flex;flex-direction:column;gap:28px;align-items:stretch;max-width:640px;margin:0 auto}
@@ -200,13 +200,13 @@ body.palette-sync .ident::before{transition-duration:.4s}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html,body{max-width:100%;overflow-x:hidden}
 .grid>*{min-width:0}
-@media (max-width:1023px){.grid{width:100%}.panel-col,.ident{max-width:100%}.tabs{max-width:100%}}
+@media (max-width:1199px){.grid{width:100%}.panel-col,.ident{max-width:100%}.tabs{max-width:100%}}
 :root[data-theme="light"] .chip.t{color:color-mix(in srgb,var(--c) 38%,#000);border-color:color-mix(in srgb,var(--c) 70%,#000 10%);background:color-mix(in srgb,var(--c) 20%,transparent)}
 :root[data-theme="light"] .chip{color:var(--ink);border-color:color-mix(in srgb,var(--ink) 30%,transparent)}
 :root[data-theme="light"] .chip.t{color:color-mix(in srgb,var(--c) 26%,#000);border-color:color-mix(in srgb,var(--c) 55%,#000);background:color-mix(in srgb,var(--c) 22%,transparent)}
 
 /* desktop: roomier card and slightly larger type, scaled to the window */
-@media (min-width:1024px){
+@media (min-width:1200px){
   .grid{max-width:1240px;grid-template-columns:minmax(0,430px) minmax(0,760px)}
   .panel{height:clamp(436px,calc(100vh - 190px),640px)}
   .pitch{font-size:16px}.pitch2{font-size:14px}.sub{font-size:13px}
@@ -223,7 +223,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .pitch{margin-top:24px}
 .pitch2{margin-top:8px}
 .panel{box-shadow:0 18px 48px -16px rgba(0,0,0,.55)}
-@media (max-width:1023px){.grid{gap:24px}}
+@media (max-width:1199px){.grid{gap:24px}}
 
 /* interaction feel: gentle lift on hover, press-in on tap, smooth springy transitions */
 .btn,.ibtn,.tab,.item,.dock button{transition:transform .18s cubic-bezier(.3,1.4,.5,1),box-shadow .2s ease,background-color .16s,border-color .16s,color .16s,border-radius .25s,opacity .16s}
@@ -234,13 +234,13 @@ html,body{max-width:100%;overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){.btn,.ibtn,.tab,.item{transform:none!important}}
 
 /* coordination pass: card and text block share a baseline, tabs sit close to the icon row */
-@media (min-width:1024px){
+@media (min-width:1200px){
   .stage{padding-bottom:112px}
   .panel{height:clamp(436px,calc(100vh - 262px),600px)}
   .grid{align-items:end}
   .ident{margin-bottom:0}
 }
-@media (max-width:1023px){
+@media (max-width:1199px){
   .grid{gap:14px}
   .ident{margin-bottom:0}
   .stage{padding-top:64px}
@@ -255,13 +255,13 @@ html,body{max-width:100%;overflow-x:hidden}
 .chip-date{box-shadow:0 4px 12px -6px rgba(0,0,0,.5)}
 .who{gap:14px}
 .avatar{box-shadow:0 8px 22px -8px rgba(0,0,0,.6);border-color:color-mix(in srgb,var(--ink) 18%,transparent)}
-@media (min-width:1024px){
+@media (min-width:1200px){
   .detail{padding:26px 32px 20px}
   .list{padding:18px 12px;gap:8px}
   .tabs{gap:4px;padding-inline-start:6px}
   .pitch{max-width:40ch}.pitch2{max-width:46ch}
 }
-@media (max-width:1023px){
+@media (max-width:1199px){
   .stage{padding-top:calc(18svh + 20px)}
   .grid{min-height:calc(82svh)}
   h1{font-size:22px}
@@ -273,7 +273,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .detail{padding:20px 20px 16px}
   .dhead h2{font-size:20px}
 }
-@media (min-width:1024px){.item b{font-size:15px}.item{padding:14px 10px}.list{padding:18px 10px}}
+@media (min-width:1200px){.item b{font-size:15px}.item{padding:14px 10px}.list{padding:18px 10px}}
 
 /* shadows only behind the icon buttons */
 .btn,.btn:hover,.btn:active,.panel,.tab[aria-selected="true"],.item[aria-selected="true"],.chip-date,.avatar,.dock,:root[data-theme="light"] .btn{box-shadow:none}
@@ -284,20 +284,20 @@ html,body{max-width:100%;overflow-x:hidden}
 .ident::before{background:none!important;content:none!important}
 
 /* alignment pass: text block and card start on one top line, both low, sky open above, clouds clear of the text */
-@media (min-width:1024px){
+@media (min-width:1200px){
   .stage{align-items:flex-start;padding-top:28vh;padding-bottom:0}
   .grid{align-items:start}
   .ident{align-self:start;margin-bottom:0}
   .panel-col{align-self:start}
   .panel{height:clamp(340px,calc(72vh - 150px),520px)}
 }
-@media (max-width:1023px){
+@media (max-width:1199px){
   .stage{padding-top:calc(34svh)}
   .grid{min-height:0}
 }
 
 /* phone composition: hero high, sky gap, card runs to the bottom edge; roomier icon buttons */
-@media (max-width:1023px){
+@media (max-width:1199px){
   .stage{padding-top:64px;padding-bottom:0}
   .grid{min-height:calc(100svh - 64px);gap:0}
   .ident{margin-bottom:24px}
@@ -307,7 +307,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .icons{gap:10px;margin-top:18px}
   .btns{margin-top:22px}
 }
-@media (max-width:1023px){
+@media (max-width:1199px){
   .panel{height:44svh;min-height:0;overflow:hidden}
   .view,.split{height:100%}
   .split{grid-template-rows:auto minmax(0,1fr)}
@@ -316,10 +316,10 @@ html,body{max-width:100%;overflow-x:hidden}
   .full{height:100%;overflow:auto}
   .grid{min-height:calc(100svh - 64px)}
 }
-@media (max-width:1023px){.panel{flex:0 0 auto}.panel-col{flex:0 0 auto}}
-@media (max-width:1023px){.panel{height:40svh}}
+@media (max-width:1199px){.panel{flex:0 0 auto}.panel-col{flex:0 0 auto}}
+@media (max-width:1199px){.panel{height:40svh}}
 /* phone type scale matched to the reference's proportions (own values) */
-@media (max-width:1023px){
+@media (max-width:1199px){
   .stage{padding-inline:20px}
   .pitch{font-size:15px;font-weight:600;line-height:1.55}
   .pitch2{font-size:13px;line-height:1.6}
