@@ -44,7 +44,7 @@ function layoutAnchors(){
     if(bot>H)bot=H*.7;
     const gap=Math.max(40,bot-top);
     orb={x:W*.5,y:top+gap*.5,r:Math.max(10,Math.min(W*.075,gap*.32,34))};
-    cloudBand=[top+gap*.12,bot-gap*.12];
+    cloudBand=[top+Math.max(4,gap*.05),Math.max(top+10,bot-72)];
   }else{
     orb={x:W*(mode==='light'?.62:.5),y:H*.15,r:Math.max(14,Math.min(30,H*.035))};
     cloudBand=[H*.04,H*.17];
@@ -81,7 +81,7 @@ function build(){
   cloudSprites=[];clouds=[];
   const nc=W<700?2:3;
   for(let i=0;i<nc;i++){
-    const cw=W<700?W*(.4+R()*.2):W*(.1+R()*.07),ch=Math.max(26,cw*(.28+R()*.08));
+    let cw=W<700?W*(.4+R()*.2):W*(.1+R()*.07),ch=Math.max(26,cw*(.28+R()*.08));if(W<1200||W/H<0.95){ch=Math.min(ch,Math.max(18,(cloudBand[1]-cloudBand[0])*1.1));cw=Math.min(cw,ch*3.4);}
     cloudSprites.push(makeCloud(cw,ch,R));
     const band=cloudBand[1]-cloudBand[0];
     clouds.push({i,x:R()*W,y:cloudBand[0]+band*(i/(nc-.4))+(R()-.5)*8,v:6+R()*9});
